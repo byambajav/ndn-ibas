@@ -92,7 +92,8 @@ enum {
 enum SignatureTypeValue {
   DigestSha256 = 0,
   SignatureSha256WithRsa = 1,
-  SignatureSha256WithEcdsa = 3
+  SignatureSha256WithEcdsa = 3,
+  SignatureSha256Ibas = 4
 };
 
 /** @brief indicates a possible value of ContentType field

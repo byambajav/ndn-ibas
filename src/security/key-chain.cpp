@@ -593,6 +593,21 @@ KeyChain::signPacketWrapper(Data& data, const Signature& signature,
 }
 
 void
+KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature,
+                                const std::string& identity, DigestAlgorithm digestAlgorithm)
+{
+  data.setSignature(signature);
+
+  EncodingBuffer encoder;
+  data.wireEncode(encoder, true);
+
+  // TODO: IBAS instead of below signInTpm
+  // Block signatureValue = m_tpm->signInTpm(encoder.buf(), encoder.size(),
+  //                                         keyName, digestAlgorithm);
+  // data.wireEncode(encoder, signatureValue);
+}
+
+void
 KeyChain::signPacketWrapper(Interest& interest, const Signature& signature,
                             const Name& keyName, DigestAlgorithm digestAlgorithm)
 {

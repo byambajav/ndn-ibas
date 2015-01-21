@@ -30,6 +30,7 @@
 #include "secured-bag.hpp"
 #include "signature-sha256-with-rsa.hpp"
 #include "signature-sha256-with-ecdsa.hpp"
+#include "signature-sha256-ibas.hpp"
 #include "digest-sha256.hpp"
 
 #include "../interest.hpp"
@@ -251,6 +252,16 @@ public:
   template<typename T>
   void
   signByIdentity(T& packet, const Name& identityName);
+
+  /**
+   * @brief Sign packet using Identity-Based Aggregate Signatures.
+   *
+   * @param packet The packet to be signed.
+   * @param identityName The signing identity name.
+   */
+  template<typename T>
+  void
+  signByIdentityIbas(T& packet, const std::string& identity);
 
   /**
    * @brief Sign the byte array using the default certificate of a particular identity.
@@ -731,6 +742,10 @@ private:
   signPacketWrapper(Data& data, const Signature& signature,
                     const Name& keyName, DigestAlgorithm digestAlgorithm);
 
+  void
+  signPacketWrapperIbas(Data& data, const Signature& signature,
+                        const std::string& identity, DigestAlgorithm digestAlgorithm);
+
   /**
    * @brief Sign the interest using a particular key.
    *
@@ -800,6 +815,19 @@ KeyChain::signByIdentity(T& packet, const Name& identityName)
   // We either get or create the signing certificate, sign packet! (no exception unless fatal
   // error in TPM)
   sign(packet, signingCertificateName);
+}
+
+template<typename T>
+void
+KeyChain::signByIdentityIbas(T& packet, const std::string& identity)
+{
+  // Create an empty signature
+  shared_ptr<Signature> signature = make_shared<SignatureSha256Ibas>();
+
+  // Actually sign the packet
+  signPacketWrapperIbas(packet, *signature,
+                        identity,
+                        DIGEST_ALGORITHM_SHA256);
 }
 
 template<typename T>
