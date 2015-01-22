@@ -215,7 +215,6 @@ KeyChain::initialize(const std::string& pibLocatorUri,
 void
 KeyChain::initializeIbas(const std::string& privateParamsFilePath) {
   // Ignore errors for now
-  // m_ibas = IbasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH, privateParamsFilePath);
   m_ibas = std::unique_ptr<IbasSigner>(new IbasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH,
                                                       privateParamsFilePath));
 }

@@ -52,6 +52,8 @@ def configure(conf):
                    mandatory=False)
     conf.check_cxx(lib='rt', uselib_store='RT', define_name='HAVE_RT', mandatory=False)
     conf.check_cxx(cxxflags=['-fPIC'], uselib_store='PIC', mandatory=False)
+    conf.check_cxx(lib='pbc', uselib_store='PBC', define_name='HAVE_PBC', mandatory=False)
+    conf.check_cxx(lib='gmp', uselib_store='GMP', define_name='HAVE_GMP', mandatory=False)
 
     conf.check_osx_security(mandatory=False)
 
@@ -114,7 +116,7 @@ def build(bld):
         source=bld.path.ant_glob('src/**/*.cpp',
                                  excl=['src/**/*-osx.cpp', 'src/**/*-sqlite3.cpp']),
         headers='src/common-pch.hpp',
-        use='version BOOST CRYPTOPP SQLITE3 RT PIC PTHREAD',
+        use='version BOOST CRYPTOPP SQLITE3 RT PIC PTHREAD PBC GMP',
         includes=". src",
         export_includes="src",
         install_path='${LIBDIR}',
