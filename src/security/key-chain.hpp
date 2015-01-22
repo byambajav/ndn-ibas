@@ -33,6 +33,8 @@
 #include "signature-sha256-ibas.hpp"
 #include "digest-sha256.hpp"
 
+#include "ibas-signer.hpp"
+
 #include "../interest.hpp"
 #include "../util/crypto.hpp"
 #include "../util/random.hpp"
@@ -254,14 +256,21 @@ public:
   signByIdentity(T& packet, const Name& identityName);
 
   /**
+   * @brief Initializes an IbasSigner
+   *
+   * @param privateKeyFilePath Path of file which includes an identity and corresponding private key
+   */
+  void
+  initializeIbas(const std::string& privateKeyFilePath);
+
+  /**
    * @brief Sign packet using Identity-Based Aggregate Signatures.
    *
    * @param packet The packet to be signed.
-   * @param identityName The signing identity name.
    */
   template<typename T>
   void
-  signByIdentityIbas(T& packet, const std::string& identity);
+  signIbas(T& packet);
 
   /**
    * @brief Sign the byte array using the default certificate of a particular identity.
@@ -743,8 +752,7 @@ private:
                     const Name& keyName, DigestAlgorithm digestAlgorithm);
 
   void
-  signPacketWrapperIbas(Data& data, const Signature& signature,
-                        const std::string& identity, DigestAlgorithm digestAlgorithm);
+  signPacketWrapperIbas(Data& data, const Signature& signature);
 
   /**
    * @brief Sign the interest using a particular key.
@@ -775,6 +783,7 @@ public:
 private:
   std::unique_ptr<SecPublicInfo> m_pib;
   std::unique_ptr<SecTpm> m_tpm;
+  std::unique_ptr<IbasSigner> m_ibas;
   time::milliseconds m_lastTimestamp;
 };
 
@@ -819,15 +828,13 @@ KeyChain::signByIdentity(T& packet, const Name& identityName)
 
 template<typename T>
 void
-KeyChain::signByIdentityIbas(T& packet, const std::string& identity)
+KeyChain::signIbas(T& packet)
 {
   // Create an empty signature
   shared_ptr<Signature> signature = make_shared<SignatureSha256Ibas>();
 
   // Actually sign the packet
-  signPacketWrapperIbas(packet, *signature,
-                        identity,
-                        DIGEST_ALGORITHM_SHA256);
+  signPacketWrapperIbas(packet, *signature);
 }
 
 template<typename T>

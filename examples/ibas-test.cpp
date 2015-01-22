@@ -1,5 +1,7 @@
 #include "security/key-chain.hpp"
 
+#define DEFAULT_PRIVATE_PARAMS_FILE_PATH "~/.ndn/ibas/a.id"
+
 namespace ibas {
   using namespace ndn;
 
@@ -19,12 +21,12 @@ namespace ibas {
     std::string signatureInfo = reinterpret_cast<const char*>(data.getSignature().getInfo().value());
     std::cout << "SignatureInfo: " << signatureInfo << std::endl;
 
-    KeyLocator keyLocator = data.getSignature().getKeyLocator();
-    Name keyLocatorName = keyLocator.getName();
-    std::cout << "KeyLocatorName: " << keyLocatorName.toUri() << std::endl;
+    // KeyLocator keyLocator = data.getSignature().getKeyLocator();
+    // Name keyLocatorName = keyLocator.getName();
+    // std::cout << "KeyLocatorName: " << keyLocatorName.toUri() << std::endl;
   }
 
-  Data createSignData(std::string nameString, std::string identity, std::string content) {
+  Data createSignData(std::string nameString, std::string privateParamsFilePath, std::string content) {
     using namespace ndn;
 
     Name name(nameString);
@@ -32,7 +34,8 @@ namespace ibas {
     data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
 
     KeyChain keyChain;
-    keyChain.signByIdentityIbas(data, identity);
+    keyChain.initializeIbas(privateParamsFilePath);
+    keyChain.signIbas(data);
 
     logData(data);
     return data;
@@ -42,11 +45,14 @@ namespace ibas {
 
 int main(int argc, char *argv[])
 {
-  if (argc < 4) {
-    std::cout << argv[0] << " nameString id content" << std::endl;
+  if (argc == 4) {
+    ndn::Data signedData = ibas::createSignData(argv[1], argv[2], argv[3]);
+  } else if (argc == 3) {
+    ndn::Data signedData = ibas::createSignData(argv[1], argv[2], DEFAULT_PRIVATE_PARAMS_FILE_PATH);
+  } else {
+    std::cout << argv[0] << " dataName content [privateParamsFilePath]" << std::endl;
     return 1;
   }
 
-  ndn::Data signedData = ibas::createSignData(argv[1], argv[2], argv[3]);
   return 0;
 }

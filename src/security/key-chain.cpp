@@ -49,6 +49,8 @@ const std::string DEFAULT_TPM_SCHEME = "tpm-osxkeychain";
 const std::string DEFAULT_TPM_SCHEME = "tpm-file";
 #endif // defined(NDN_CXX_HAVE_OSX_SECURITY) and defined(NDN_CXX_WITH_OSX_KEYCHAIN)
 
+const std::string DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH = "~/.ndn/ibas/params.conf";
+
 // When static library is used, not everything is compiled into the resulting binary.
 // Therefore, the following standard PIB and TPMs need to be registered here.
 // http://stackoverflow.com/q/9459980/2150331
@@ -208,6 +210,14 @@ KeyChain::initialize(const std::string& pibLocatorUri,
 
   m_tpm = tpmFactory->second.create(tpmLocation);
   m_pib->setTpmLocator(actualTpmLocator);
+}
+
+void
+KeyChain::initializeIbas(const std::string& privateParamsFilePath) {
+  // Ignore errors for now
+  // m_ibas = IbasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH, privateParamsFilePath);
+  m_ibas = std::unique_ptr<IbasSigner>(new IbasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH,
+                                                      privateParamsFilePath));
 }
 
 Name
@@ -593,8 +603,7 @@ KeyChain::signPacketWrapper(Data& data, const Signature& signature,
 }
 
 void
-KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature,
-                                const std::string& identity, DigestAlgorithm digestAlgorithm)
+KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature)
 {
   data.setSignature(signature);
 
@@ -605,6 +614,8 @@ KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature,
   // Block signatureValue = m_tpm->signInTpm(encoder.buf(), encoder.size(),
   //                                         keyName, digestAlgorithm);
   // data.wireEncode(encoder, signatureValue);
+  Block signatureValue = m_ibas->sign(encoder.buf(), encoder.size());
+  data.wireEncode(encoder, signatureValue);
 }
 
 void
