@@ -49,7 +49,8 @@ const std::string DEFAULT_TPM_SCHEME = "tpm-osxkeychain";
 const std::string DEFAULT_TPM_SCHEME = "tpm-file";
 #endif // defined(NDN_CXX_HAVE_OSX_SECURITY) and defined(NDN_CXX_WITH_OSX_KEYCHAIN)
 
-const std::string DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH = "~/.ndn/ibas/params.conf";
+const std::string DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH =
+  std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
 
 // When static library is used, not everything is compiled into the resulting binary.
 // Therefore, the following standard PIB and TPMs need to be registered here.

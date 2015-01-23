@@ -258,10 +258,10 @@ public:
   /**
    * @brief Initializes an IbasSigner
    *
-   * @param privateKeyFilePath Path of file which includes an identity and corresponding private key
+   * @param privateParamsFilePath Path of file which includes an identity and corresponding private key
    */
   void
-  initializeIbas(const std::string& privateKeyFilePath);
+  initializeIbas(const std::string& privateParamsFilePath);
 
   /**
    * @brief Sign packet using Identity-Based Aggregate Signatures.

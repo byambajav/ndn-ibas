@@ -19,17 +19,25 @@ class IbasSigner
    */
   IbasSigner(const std::string& paramsFilePath, const std::string& privateParamsFilePath);
 
+  ~IbasSigner();
+
   Block sign(const uint8_t* data, size_t dataLength);
 
   // TODO: Block signAndAggregate(), verify();
 
  private:
-  void pbcPairingInit(char* publicParamsFilePath);
+  void publicParamsInit(const char* publicParamsFilePath);
+  void privateParamsInit(const char* privateParamsFilePath);
 
  private:
-  std::string m_identity;
-  pairing_t m_pairing;
-  // TODO: private keys, various paramaters
+  std::string identity;
+
+  // Public params
+  pairing_t pairing;
+  element_t P, Q;
+
+  // Private params
+  element_t s_P_0, s_P_1;
 };
 
 } // namespace ndn
