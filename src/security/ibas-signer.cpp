@@ -1,5 +1,7 @@
 #include "ibas-signer.hpp"
 
+#include "../util/ibas-hash.hpp"
+
 namespace ndn {
 
 const int DEFAULT_PARAMS_FILE_SIZE = 16384;
@@ -15,6 +17,10 @@ IbasSigner::IbasSigner(const std::string& publicParamsFilePath,
 }
 
 IbasSigner::~IbasSigner() {
+  element_clear(P);
+  element_clear(Q);
+  element_clear(s_P_0);
+  element_clear(s_P_1);
   pairing_clear(pairing);
 }
 
@@ -42,19 +48,15 @@ void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
 
   std::ifstream infile(publicParamsFilePath);
   std::string param, value;
-  while (infile >> param >> value)
-  {
+  while (infile >> param >> value) {
     if (param == "P") {
-      // value.replace(value.find(","), 1, ", ");
       if (!element_set_str(P, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read P correctly");
       }
-      element_printf("P: %B\n", P);
     } else if (param == "Q") {
       if (!element_set_str(Q, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read Q correctly");
       }
-      element_printf("Q: %B\n", Q);
     }
   }
 
@@ -70,10 +72,32 @@ void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
 }
 
 void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
-  // TODO
   element_init_G1(s_P_0, pairing);
   element_init_G1(s_P_1, pairing);
-  std::cout << "Private params initialized" << std::endl;
+
+  std::ifstream infile(privateParamsFilePath);
+  std::string param, value;
+  while (infile >> param >> value) {
+    if (param == "id") {
+      identity = value;
+      std::cout << identity << std::endl;
+    } else if (param == "s_P_0") {
+      if (!element_set_str(s_P_0, value.c_str(), PARAMS_STORE_BASE)) {
+        pbc_die("Could not read s_P_0 correctly");
+      }
+      element_printf("s_P_0: %B\n", s_P_0);
+    } else if (param == "s_P_1") {
+      if (!element_set_str(s_P_1, value.c_str(), PARAMS_STORE_BASE)) {
+        pbc_die("Could not read s_P_1 correctly");
+      }
+      element_printf("s_P_1: %B\n", s_P_1);
+    }
+  }
+
+  // //generate private keys
+  // util::generateSecretKeyForIdentit/y("Alice", pairing);
+  // util::generateSecretKeyForIdentity("GovernmentOffice", pairing);
+  // util::generateSecretKeyForIdentity("Bob", pairing);
 }
 
 } // namespace ndn

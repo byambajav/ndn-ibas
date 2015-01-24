@@ -1,6 +1,6 @@
 #include "security/key-chain.hpp"
 
-#define DEFAULT_PRIVATE_PARAMS_FILE_PATH "~/.ndn/ibas/a.id"
+#define DEFAULT_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Alice.id"
 
 namespace ibas {
   using namespace ndn;
@@ -26,7 +26,8 @@ namespace ibas {
     // std::cout << "KeyLocatorName: " << keyLocatorName.toUri() << std::endl;
   }
 
-  Data createSignData(std::string nameString, std::string privateParamsFilePath, std::string content) {
+  Data createSignData(std::string nameString, std::string content,
+                      std::string privateParamsFilePath) {
     using namespace ndn;
 
     Name name(nameString);

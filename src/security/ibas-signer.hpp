@@ -26,7 +26,14 @@ class IbasSigner
   // TODO: Block signAndAggregate(), verify();
 
  private:
+  /**
+   * @brief Initializes the pairing and public params
+   */
   void publicParamsInit(const char* publicParamsFilePath);
+
+  /**
+   * @brief Initializes the private params
+   */
   void privateParamsInit(const char* privateParamsFilePath);
 
  private:
