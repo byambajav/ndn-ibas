@@ -1,11 +1,16 @@
+// #include <ctime>
+#include <chrono>
+
 #include "ibas-signer.hpp"
 
 #include "../util/ibas-hash.hpp"
+#include "../encoding/buffer-stream.hpp"
 
 namespace ndn {
 
-const int DEFAULT_PARAMS_FILE_SIZE = 16384;
-const int PARAMS_STORE_BASE = 10; // The PBC library does not work properly if the base is not 10
+const static int DEFAULT_PARAMS_FILE_SIZE = 16384;
+const static int PARAMS_STORE_BASE = 10; // The PBC library does not work properly if the base is not 10
+const static int W_LENGTH = 20;
 
 IbasSigner::IbasSigner(const std::string& publicParamsFilePath,
                        const std::string& privateParamsFilePath) {
@@ -26,7 +31,67 @@ IbasSigner::~IbasSigner() {
 
 Block IbasSigner::sign(const uint8_t* data, size_t dataLength) {
   // TODO: actual signing
-  return Block(tlv::SignatureValue);
+  element_t P_w;
+  element_t c, r;
+  element_t S, T, temp1;
+  element_init_G1(P_w, pairing);
+  element_init_Zr(c, pairing);
+  element_init_Zr(r, pairing);
+  element_init_G1(S, pairing);
+  element_init_G1(T, pairing);
+  element_init_G1(temp1, pairing);
+
+  const std::string w = generateW();
+
+  // P_w = H_{2}(w)
+  util::calculateH2(P_w, w, pairing);
+  element_printf("P_w %B\n", P_w);
+
+  // C_i = H_{3}(m_i, ID_i, w)
+  util::calculateH3(c, std::string(data, data + dataLength) + identity + w, pairing);
+  element_printf("c %B\n", c);
+
+  element_random(r);
+  element_printf("r %B\n", r);
+
+  //computes T_i = r_{i}P
+  element_mul_zn(T, P, r); // T_i = r_{i}P
+  element_printf("T %B\n", T);
+
+  // Compute S_i = r_{i}P_{w} + sP_{i,0} + c_{i}sP_{i,1}
+  element_mul_zn(S, P_w, r); // r_{i}P_{w}
+  element_mul_zn(temp1, s_P_1, c); // c_{i}sP_{i,1}
+  element_add(S, S, s_P_0);
+  element_add(S, S, temp1);
+  element_printf("S %B\n", S);
+
+  // Compress T_i and S_i into unsigned char arrays
+  size_t T_size = element_length_in_bytes_compressed(T);
+  size_t S_size = element_length_in_bytes_compressed(S);
+  std::cout << "T_size: " << T_size << ", S_size: " << S_size << std::endl;
+  // TODO: Find a workaround for VLA error
+  unsigned char T_compressed[T_size];
+  unsigned char S_compressed[S_size];
+  element_to_bytes_compressed(T_compressed, T);
+  element_to_bytes_compressed(S_compressed, S);
+  T_compressed[T_size] = '\0';
+  S_compressed[S_size] = '\0';
+
+  // Concatenate signature parts
+  // TODO: Check required
+  OBufferStream os;
+  os << w;
+  os << T_compressed;
+  os << S_compressed;
+
+  element_clear(P_w);
+  element_clear(c);
+  element_clear(r);
+  element_clear(S);
+  element_clear(T);
+  element_clear(temp1);
+
+  return Block(tlv::SignatureValue, os.buf());
 }
 
 void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
@@ -98,6 +163,17 @@ void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
   // util::generateSecretKeyForIdentit/y("Alice", pairing);
   // util::generateSecretKeyForIdentity("GovernmentOffice", pairing);
   // util::generateSecretKeyForIdentity("Bob", pairing);
+}
+
+const std::string IbasSigner::generateW() {
+  using namespace std::chrono;
+  milliseconds ms = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+  std::string res = std::to_string(ms.count());
+  for (int i = res.size(); i < W_LENGTH; i++) {
+    // TODO: it should be random
+    res += "0";
+  }
+  return res;
 }
 
 } // namespace ndn

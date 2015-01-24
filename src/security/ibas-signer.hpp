@@ -36,6 +36,11 @@ class IbasSigner
    */
   void privateParamsInit(const char* privateParamsFilePath);
 
+  /**
+   * @brief Generates a random w, mostly current time as a string
+   */
+  const std::string generateW();
+
  private:
   std::string identity;
 

@@ -20,11 +20,20 @@ namespace ndn {
     void calculateH1(element_t hash, const std::string& str, pairing_t pairing);
 
     /**
-     * @brief Computes the H3:{0,1}*->Z/qZ digest of string.
+     * @brief Computes the H2:{0,1}*->G1 digest of string.
      *
      * @param hash The element to insert result
      * @param str The string to calculate hash
      * @param pairing The pairing
+     */
+    void calculateH2(element_t hash, const std::string& str, pairing_t pairing);
+
+    /**
+     * @brief Computes the H3:{0,1}*->Z/qZ digest of data.
+     *
+     * @param hash The element to insert result
+     * @param data The data to calculate hash
+     * @param pairing The pairing used
      */
     void calculateH3(element_t hash, const std::string& str, pairing_t pairing);
 

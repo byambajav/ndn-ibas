@@ -16,11 +16,20 @@ void calculateH1(element_t hash, const std::string& str, pairing_t pairing) {
 
   // Convert the hash to a G_1 field element
   element_from_hash(hash, digest, crypto::SHA256_DIGEST_SIZE);
-  // element_printf("hash %B\n", hash);
+}
+
+void calculateH2(element_t hash, const std::string& str, pairing_t pairing) {
+  calculateH1(hash, str + "dummy", pairing);
 }
 
 void calculateH3(element_t hash, const std::string& str, pairing_t pairing) {
-  calculateH1(hash, str + "dummy", pairing);
+  // Calculate SHA256
+  const uint8_t *data = reinterpret_cast<const uint8_t*>(str.data());
+  uint8_t digest[crypto::SHA256_DIGEST_SIZE];
+  ndn_digestSha256(data, str.size(), digest);
+
+  // Convert the hash to a Z_r field element
+  element_from_hash(hash, digest, crypto::SHA256_DIGEST_SIZE);
 }
 
 void generateSecretKeyForIdentity(const std::string& identity, pairing_t pairing) {
