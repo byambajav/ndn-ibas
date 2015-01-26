@@ -273,6 +273,15 @@ public:
   signIbas(T& packet);
 
   /**
+   * @brief Sign adn Aggregate packet using Identity-Based Aggregate Signatures.
+   *
+   * @param packet The packet to be signed, it should contain the old signature.
+   */
+  template<typename T>
+  void
+  signAndAggregateIbas(T& packet);
+
+  /**
    * @brief Sign the byte array using the default certificate of a particular identity.
    *
    * @param buffer The byte array to be signed.
@@ -754,6 +763,9 @@ private:
   void
   signPacketWrapperIbas(Data& data, const Signature& signature);
 
+  void
+  signAndAggregatePacketWrapperIbas(Data& data, const Signature& signature);
+
   /**
    * @brief Sign the interest using a particular key.
    *
@@ -835,6 +847,17 @@ KeyChain::signIbas(T& packet)
 
   // Actually sign the packet
   signPacketWrapperIbas(packet, *signature);
+}
+
+template<typename T>
+void
+KeyChain::signAndAggregateIbas(T& packet)
+{
+  // Create an empty signature
+  shared_ptr<Signature> signature = make_shared<SignatureSha256Ibas>();
+
+  // Actually sign the packet
+  signAndAggregatePacketWrapperIbas(packet, *signature);
 }
 
 template<typename T>

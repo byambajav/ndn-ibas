@@ -4,6 +4,7 @@
 #include <pbc/pbc.h>
 
 #include "../encoding/block.hpp"
+#include "../signature.hpp"
 
 // This class should be merged into SecTpmFile.
 // Making it a separate class is just for the ease of implementation.
@@ -21,9 +22,24 @@ class IbasSigner
 
   ~IbasSigner();
 
+  /**
+   * @brief Computes a new IBAS signature of given data
+   *
+   * @param data The data sign
+   * @param dataLength The data's length
+   */
   Block sign(const uint8_t* data, size_t dataLength);
 
-  // TODO: Block signAndAggregate(), verify();
+  /**
+   * @brief Computes a new IBAS signature by aggregating
+   *
+   * @param data The data sign
+   * @param dataLength The data's length
+   * @param oldSignature The old signature to aggregate
+   */
+  Block signAndAggregate(const uint8_t* data, size_t dataLength, const Signature& oldSignature);
+
+  // TODO: verify();
 
  private:
   /**
@@ -40,6 +56,20 @@ class IbasSigner
    * @brief Generates a random w, mostly current time as a string
    */
   const std::string generateW();
+
+  /**
+   * @brief Calculates T, S signatures of given data using given data and w parameters.
+   *        The method assumes that T and S elements are initialized previously.
+   */
+  void signInternal(element_t T, element_t S, const uint8_t* data, size_t dataLength,
+                                const std::string& w);
+
+  /**
+   * @brief Writes w, T, S into a block as a signature
+   *
+   * @param clear If true clear T, S elements after using
+   */
+  Block signIntoBlock(element_t T, element_t S, const std::string& w, bool clear);
 
  private:
   std::string identity;

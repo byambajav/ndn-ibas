@@ -1,6 +1,8 @@
 #include "security/key-chain.hpp"
 
-#define DEFAULT_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Alice.id"
+#define ALICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Alice.id"
+#define GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/GovernmentOffice.id"
+#define BOB_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Bob.id"
 
 namespace ibas {
   using namespace ndn;
@@ -26,8 +28,7 @@ namespace ibas {
     // std::cout << "KeyLocatorName: " << keyLocatorName.toUri() << std::endl;
   }
 
-  Data createSignData(std::string nameString, std::string content,
-                      std::string privateParamsFilePath) {
+  Data createSignAggregateData(std::string nameString, std::string content) {
     using namespace ndn;
 
     Name name(nameString);
@@ -35,10 +36,14 @@ namespace ibas {
     data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
 
     KeyChain keyChain;
-    keyChain.initializeIbas(privateParamsFilePath);
+    keyChain.initializeIbas(ALICE_PRIVATE_PARAMS_FILE_PATH);
     keyChain.signIbas(data);
-
     logData(data);
+
+    keyChain.initializeIbas(GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH);
+    keyChain.signAndAggregateIbas(data);
+    logData(data);
+
     return data;
   }
 
@@ -46,12 +51,10 @@ namespace ibas {
 
 int main(int argc, char *argv[])
 {
-  if (argc == 4) {
-    ndn::Data signedData = ibas::createSignData(argv[1], argv[2], argv[3]);
-  } else if (argc == 3) {
-    ndn::Data signedData = ibas::createSignData(argv[1], argv[2], DEFAULT_PRIVATE_PARAMS_FILE_PATH);
+  if (argc == 3) {
+    ndn::Data signedData = ibas::createSignAggregateData(argv[1], argv[2]);
   } else {
-    std::cout << argv[0] << " dataName content [privateParamsFilePath]" << std::endl;
+    std::cout << argv[0] << " dataName content" << std::endl;
     return 1;
   }
 

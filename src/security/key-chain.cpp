@@ -610,11 +610,20 @@ KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature)
   EncodingBuffer encoder;
   data.wireEncode(encoder, true);
 
-  // TODO: IBAS instead of below signInTpm
-  // Block signatureValue = m_tpm->signInTpm(encoder.buf(), encoder.size(),
-  //                                         keyName, digestAlgorithm);
-  // data.wireEncode(encoder, signatureValue);
   Block signatureValue = m_ibas->sign(encoder.buf(), encoder.size());
+  data.wireEncode(encoder, signatureValue);
+}
+
+void
+KeyChain::signAndAggregatePacketWrapperIbas(Data& data, const Signature& signature)
+{
+  Signature oldSignature = data.getSignature();
+  data.setSignature(signature);
+
+  EncodingBuffer encoder;
+  data.wireEncode(encoder, true);
+
+  Block signatureValue = m_ibas->signAndAggregate(encoder.buf(), encoder.size(), oldSignature);
   data.wireEncode(encoder, signatureValue);
 }
 

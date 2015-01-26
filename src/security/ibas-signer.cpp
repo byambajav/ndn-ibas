@@ -1,4 +1,3 @@
-// #include <ctime>
 #include <chrono>
 
 #include "ibas-signer.hpp"
@@ -19,6 +18,9 @@ IbasSigner::IbasSigner(const std::string& publicParamsFilePath,
 
   // Loads the private parameters: (id, s_P_0, s_P_1)
   privateParamsInit(privateParamsFilePath.c_str());
+
+  // The following cast is used frequently in this class
+  static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
 }
 
 IbasSigner::~IbasSigner() {
@@ -29,32 +31,29 @@ IbasSigner::~IbasSigner() {
   pairing_clear(pairing);
 }
 
-Block IbasSigner::sign(const uint8_t* data, size_t dataLength) {
-  // TODO: actual signing
+void IbasSigner::signInternal(element_t T, element_t S, const uint8_t* data, size_t dataLength,
+                              const std::string& w) {
   element_t P_w;
   element_t c, r;
-  element_t S, T, temp1;
+  element_t temp1;
+
   element_init_G1(P_w, pairing);
   element_init_Zr(c, pairing);
   element_init_Zr(r, pairing);
-  element_init_G1(S, pairing);
-  element_init_G1(T, pairing);
   element_init_G1(temp1, pairing);
 
-  const std::string w = generateW();
-
-  // P_w = H_{2}(w)
+  // Compute P_w = H_{2}(w)
   util::calculateH2(P_w, w, pairing);
   element_printf("P_w %B\n", P_w);
 
-  // C_i = H_{3}(m_i, ID_i, w)
+  // Compute C_i = H_{3}(m_i, ID_i, w)
   util::calculateH3(c, std::string(data, data + dataLength) + identity + w, pairing);
   element_printf("c %B\n", c);
 
   element_random(r);
   element_printf("r %B\n", r);
 
-  //computes T_i = r_{i}P
+  // Compute T_i = r_{i}P
   element_mul_zn(T, P, r); // T_i = r_{i}P
   element_printf("T %B\n", T);
 
@@ -65,33 +64,80 @@ Block IbasSigner::sign(const uint8_t* data, size_t dataLength) {
   element_add(S, S, temp1);
   element_printf("S %B\n", S);
 
-  // Compress T_i and S_i into unsigned char arrays
-  size_t T_size = element_length_in_bytes_compressed(T);
-  size_t S_size = element_length_in_bytes_compressed(S);
-  std::cout << "T_size: " << T_size << ", S_size: " << S_size << std::endl;
-  // TODO: Find a workaround for VLA error
-  unsigned char T_compressed[T_size];
-  unsigned char S_compressed[S_size];
-  element_to_bytes_compressed(T_compressed, T);
-  element_to_bytes_compressed(S_compressed, S);
-  T_compressed[T_size] = '\0';
-  S_compressed[S_size] = '\0';
-
-  // Concatenate signature parts
-  // TODO: Check required
-  OBufferStream os;
-  os << w;
-  os << T_compressed;
-  os << S_compressed;
-
   element_clear(P_w);
   element_clear(c);
   element_clear(r);
-  element_clear(S);
-  element_clear(T);
   element_clear(temp1);
+}
 
-  return Block(tlv::SignatureValue, os.buf());
+Block IbasSigner::signIntoBlock(element_t T, element_t S, const std::string& w, bool clear) {
+  // Compress T_i and S_i into unsigned char arrays
+  size_t element_size = element_length_in_bytes_compressed(T); // T and S have same size
+  unsigned char T_compressed[element_size]; // TODO: Find a workaround for the VLA error
+  unsigned char S_compressed[element_size];
+  element_to_bytes_compressed(T_compressed, T);
+  element_to_bytes_compressed(S_compressed, S);
+
+  // Concatenate signature parts
+  BufferPtr buf = std::make_shared<Buffer>();
+  buf->insert(buf->end(), w.begin(), w.end());
+  buf->insert(buf->end(), T_compressed, T_compressed + element_size);
+  buf->insert(buf->end(), S_compressed, S_compressed + element_size);
+
+  if (clear) {
+    element_clear(T);
+    element_clear(S);
+  }
+
+  return Block(tlv::SignatureValue, buf);
+}
+
+Block IbasSigner::sign(const uint8_t* data, size_t dataLength) {
+  element_t T, S;
+  element_init_G1(T, pairing);
+  element_init_G1(S, pairing);
+
+  // Generate a new w
+  const std::string w = generateW();
+
+  // Compute T and S
+  signInternal(T, S, data, dataLength, w);
+
+  return signIntoBlock(T, S, w, true /* clear */);
+}
+
+Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
+                                   const Signature& oldSignature) {
+  // NOTE: Just sign and aggregate without verifying
+  // TODO: Verify first
+
+  // Load old signature parameters: w, T_old, S_old
+  const uint8_t* oldSig = oldSignature.getValue().value();
+  std::string w = std::string(oldSig, oldSig + W_LENGTH);
+  element_t T_old, S_old;
+  element_init_G1(T_old, pairing);
+  element_init_G1(S_old, pairing);
+  size_t oldSignatureSize = oldSignature.getValue().value_size();
+  size_t element_size = (oldSignatureSize - W_LENGTH) / 2;
+  element_from_bytes_compressed(T_old, (unsigned char*) (oldSig + W_LENGTH));
+  element_from_bytes_compressed(S_old, (unsigned char*) (oldSig + W_LENGTH + element_size));
+  element_printf("T_old: %B\n", T_old);
+  element_printf("S_old: %B\n", S_old);
+
+  // Compute new signature parameters: T_new, S_new
+  element_t T_new, S_new;
+  element_init_G1(T_new, pairing);
+  element_init_G1(S_new, pairing);
+  signInternal(T_new, S_new, data, dataLength, w);
+
+  // Aggregate the signatures
+  element_add(T_new, T_new, T_old);
+  element_add(S_new, S_new, S_old);
+
+  element_clear(T_old);
+  element_clear(S_old);
+
+  return signIntoBlock(T_new, S_new, w, true /* clear */);
 }
 
 void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
@@ -159,7 +205,7 @@ void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
     }
   }
 
-  // //generate private keys
+  // //generate private keys, this code was used only once
   // util::generateSecretKeyForIdentit/y("Alice", pairing);
   // util::generateSecretKeyForIdentity("GovernmentOffice", pairing);
   // util::generateSecretKeyForIdentity("Bob", pairing);
