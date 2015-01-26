@@ -873,7 +873,7 @@ KeyChain::signAndAggregateIbas(T& packet)
 template<typename T>
 bool
 KeyChain::verifySignatureIbas(const T& packet) {
-  m_ibas->verifySignature(packet);
+  return m_ibas->verifySignature(packet);
 }
 
 

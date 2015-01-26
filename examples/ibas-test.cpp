@@ -1,4 +1,5 @@
 #include "security/key-chain.hpp"
+#include "security/validator-null.hpp"
 
 #define ALICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Alice.id"
 #define GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/GovernmentOffice.id"
@@ -44,8 +45,13 @@ namespace ibas {
     keyChain.signAndAggregateIbas(data);
     logData(data);
 
-    keyChain.initializeIbas(BOB_PRIVATE_PARAMS_FILE_PATH);
-    keyChain.verifySignatureIbas(data);
+    // ValidatorIbas validator;
+    // OnInterestValidated onValidated = bind(&ControllerBackend::onInvitationValidated, this, _1);
+    // OnInterestValidationFailed onFailed = bind(&ControllerBackend::onInvitationValidationFailed,
+    //                                            this, _1, _2);
+    // validator.validate(*invitationInterest, onValidated, onFailed);
+
+    ValidatorNull validator;
 
     return data;
   }
