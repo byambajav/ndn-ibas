@@ -140,6 +140,25 @@ Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
   return signIntoBlock(T_new, S_new, w, true /* clear */);
 }
 
+bool IbasSigner::verifySignature(const Data& data) {
+  // TODO: Insert 'From', 'Moderator' parts in sign methods
+
+  // Get message parts and corresponding IDs
+  const Block content = data.getContent();
+  const std::string contStr = std::string(content.value_begin(), content.value_end());
+  std::cout << contStr << std::endl;
+
+  // Calculate c_{i}s
+
+  // Calculate P_{i,j}s
+
+  // Load the aggregated signature
+
+  // Verfiy signature
+
+  return true;
+}
+
 void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
   // Read pairing parameters
   char buffer[DEFAULT_PARAMS_FILE_SIZE];

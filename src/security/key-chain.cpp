@@ -609,6 +609,8 @@ KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature)
 
   EncodingBuffer encoder;
   data.wireEncode(encoder, true);
+  // data.
+  data.getContent();
 
   Block signatureValue = m_ibas->sign(encoder.buf(), encoder.size());
   data.wireEncode(encoder, signatureValue);

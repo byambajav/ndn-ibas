@@ -282,6 +282,16 @@ public:
   signAndAggregateIbas(T& packet);
 
   /**
+   * @brief Verify given packet with IBAS (TODO: It should be in a different class, e.g. Validator)
+   *        TODO: This method should not be inside KeyChain
+   *
+   * @param packet The packet to be verified
+   */
+  template<typename T>
+  bool
+  verifySignatureIbas(const T& packet);
+
+  /**
    * @brief Sign the byte array using the default certificate of a particular identity.
    *
    * @param buffer The byte array to be signed.
@@ -859,6 +869,13 @@ KeyChain::signAndAggregateIbas(T& packet)
   // Actually sign the packet
   signAndAggregatePacketWrapperIbas(packet, *signature);
 }
+
+template<typename T>
+bool
+KeyChain::verifySignatureIbas(const T& packet) {
+  m_ibas->verifySignature(packet);
+}
+
 
 template<typename T>
 void

@@ -5,6 +5,7 @@
 
 #include "../encoding/block.hpp"
 #include "../signature.hpp"
+#include "../data.hpp"
 
 // This class should be merged into SecTpmFile.
 // Making it a separate class is just for the ease of implementation.
@@ -25,7 +26,7 @@ class IbasSigner
   /**
    * @brief Computes a new IBAS signature of given data
    *
-   * @param data The data sign
+   * @param data The data to sign
    * @param dataLength The data's length
    */
   Block sign(const uint8_t* data, size_t dataLength);
@@ -33,13 +34,18 @@ class IbasSigner
   /**
    * @brief Computes a new IBAS signature by aggregating
    *
-   * @param data The data sign
+   * @param data The data to sign
    * @param dataLength The data's length
    * @param oldSignature The old signature to aggregate
    */
   Block signAndAggregate(const uint8_t* data, size_t dataLength, const Signature& oldSignature);
 
-  // TODO: verify();
+  /**
+   * @brief Verifies given data
+   *
+   * @param data The data to verify
+   */
+  bool verifySignature(const Data& data);
 
  private:
   /**

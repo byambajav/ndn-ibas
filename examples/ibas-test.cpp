@@ -44,6 +44,9 @@ namespace ibas {
     keyChain.signAndAggregateIbas(data);
     logData(data);
 
+    keyChain.initializeIbas(BOB_PRIVATE_PARAMS_FILE_PATH);
+    keyChain.verifySignatureIbas(data);
+
     return data;
   }
 
