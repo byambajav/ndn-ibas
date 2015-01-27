@@ -7,6 +7,12 @@
 namespace ndn {
 namespace util {
 
+void logString(const std::string& str) {
+  std::cout << "==========" << std::endl;
+  std::cout << str << std::endl;
+  std::cout << "==========" << std::endl;
+}
+
 void calculateH1(element_t hash, const std::string& str, pairing_t pairing) {
   // NOTE: Currently the pairing parameter is not used
   // Calculate SHA256
@@ -23,6 +29,8 @@ void calculateH2(element_t hash, const std::string& str, pairing_t pairing) {
 }
 
 void calculateH3(element_t hash, const std::string& str, pairing_t pairing) {
+  logString(str);
+
   // Calculate SHA256
   const uint8_t *data = reinterpret_cast<const uint8_t*>(str.data());
   uint8_t digest[crypto::SHA256_DIGEST_SIZE];

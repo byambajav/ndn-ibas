@@ -27,6 +27,7 @@ namespace ibas {
     // KeyLocator keyLocator = data.getSignature().getKeyLocator();
     // Name keyLocatorName = keyLocator.getName();
     // std::cout << "KeyLocatorName: " << keyLocatorName.toUri() << std::endl;
+    std::cout << std::endl;
   }
 
   Data createSignAggregateData(std::string nameString, std::string content) {
@@ -34,6 +35,7 @@ namespace ibas {
 
     Name name(nameString);
     Data data(name);
+    content.insert(0, "From: Alice\n");
     data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
 
     KeyChain keyChain;
@@ -41,6 +43,8 @@ namespace ibas {
     keyChain.signIbas(data);
     logData(data);
 
+    content.insert(0, "Moderator: GovernmentOffice\n");
+    data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
     keyChain.initializeIbas(GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH);
     keyChain.signAndAggregateIbas(data);
     logData(data);

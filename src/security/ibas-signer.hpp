@@ -77,7 +77,7 @@ class IbasSigner
   void privateParamsInit(const char* privateParamsFilePath);
 
   /**
-   * @brief Generates a random w, mostly current time as a string
+   * @brief Generates a random w, current time as a string with random padding at end
    */
   const std::string generateW();
 
@@ -94,6 +94,15 @@ class IbasSigner
    * @param clear If true clear T, S elements after using
    */
   Block signIntoBlock(element_t T, element_t S, const std::string& w, bool clear);
+
+  /**
+   * @brief Loads signature variables T, S, w from a signature
+   *        The method assumes that T and S elements are initialized previously.
+   *
+   * @return True if signature variables was successfully loaded, false otherwise.
+   */
+  bool loadSignature(element_t T, element_t S, std::string& w, const Signature& signature);
+
 
  private:
   bool m_canSign = false;

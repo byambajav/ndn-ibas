@@ -216,6 +216,7 @@ KeyChain::initialize(const std::string& pibLocatorUri,
 void
 KeyChain::initializeIbas(const std::string& privateParamsFilePath) {
   // Ignore errors for now
+  // TODO: Add initprivate method to IbasSigner, then call only that method from here
   m_ibas = std::unique_ptr<IbasSigner>(new IbasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH,
                                                       privateParamsFilePath));
 }
@@ -609,8 +610,6 @@ KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature)
 
   EncodingBuffer encoder;
   data.wireEncode(encoder, true);
-  // data.
-  data.getContent();
 
   Block signatureValue = m_ibas->sign(encoder.buf(), encoder.size());
   data.wireEncode(encoder, signatureValue);

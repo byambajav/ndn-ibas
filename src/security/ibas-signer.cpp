@@ -41,67 +41,6 @@ bool IbasSigner::canSign() {
   return m_canSign;
 }
 
-void IbasSigner::signInternal(element_t T, element_t S, const uint8_t* data, size_t dataLength,
-                              const std::string& w) {
-  element_t P_w;
-  element_t c, r;
-  element_t temp1;
-
-  element_init_G1(P_w, pairing);
-  element_init_Zr(c, pairing);
-  element_init_Zr(r, pairing);
-  element_init_G1(temp1, pairing);
-
-  // Compute P_w = H_{2}(w)
-  util::calculateH2(P_w, w, pairing);
-  element_printf("P_w %B\n", P_w);
-
-  // Compute C_i = H_{3}(m_i, ID_i, w)
-  util::calculateH3(c, std::string(data, data + dataLength) + identity + w, pairing);
-  element_printf("c %B\n", c);
-
-  element_random(r);
-  element_printf("r %B\n", r);
-
-  // Compute T_i = r_{i}P
-  element_mul_zn(T, P, r); // T_i = r_{i}P
-  element_printf("T %B\n", T);
-
-  // Compute S_i = r_{i}P_{w} + sP_{i,0} + c_{i}sP_{i,1}
-  element_mul_zn(S, P_w, r); // r_{i}P_{w}
-  element_mul_zn(temp1, s_P_1, c); // c_{i}sP_{i,1}
-  element_add(S, S, s_P_0);
-  element_add(S, S, temp1);
-  element_printf("S %B\n", S);
-
-  element_clear(P_w);
-  element_clear(c);
-  element_clear(r);
-  element_clear(temp1);
-}
-
-Block IbasSigner::signIntoBlock(element_t T, element_t S, const std::string& w, bool clear) {
-  // Compress T_i and S_i into unsigned char arrays
-  size_t element_size = element_length_in_bytes_compressed(T); // T and S have same size
-  unsigned char T_compressed[element_size]; // TODO: Find a workaround for the VLA error
-  unsigned char S_compressed[element_size];
-  element_to_bytes_compressed(T_compressed, T);
-  element_to_bytes_compressed(S_compressed, S);
-
-  // Concatenate signature parts
-  BufferPtr buf = std::make_shared<Buffer>();
-  buf->insert(buf->end(), w.begin(), w.end());
-  buf->insert(buf->end(), T_compressed, T_compressed + element_size);
-  buf->insert(buf->end(), S_compressed, S_compressed + element_size);
-
-  if (clear) {
-    element_clear(T);
-    element_clear(S);
-  }
-
-  return Block(tlv::SignatureValue, buf);
-}
-
 Block IbasSigner::sign(const uint8_t* data, size_t dataLength) {
   element_t T, S;
   element_init_G1(T, pairing);
@@ -118,21 +57,14 @@ Block IbasSigner::sign(const uint8_t* data, size_t dataLength) {
 
 Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
                                    const Signature& oldSignature) {
-  // NOTE: Just sign and aggregate without verifying
-  // TODO: Verify first
+  // NOTE: This method just signs and aggregates without verifying the old signature
 
   // Load old signature parameters: w, T_old, S_old
-  const uint8_t* oldSig = oldSignature.getValue().value();
-  std::string w = std::string(oldSig, oldSig + W_LENGTH);
+  std::string w;
   element_t T_old, S_old;
   element_init_G1(T_old, pairing);
   element_init_G1(S_old, pairing);
-  size_t oldSignatureSize = oldSignature.getValue().value_size();
-  size_t element_size = (oldSignatureSize - W_LENGTH) / 2;
-  element_from_bytes_compressed(T_old, (unsigned char*) (oldSig + W_LENGTH));
-  element_from_bytes_compressed(S_old, (unsigned char*) (oldSig + W_LENGTH + element_size));
-  element_printf("T_old: %B\n", T_old);
-  element_printf("S_old: %B\n", S_old);
+  loadSignature(T_old, S_old, w, oldSignature);
 
   // Compute new signature parameters: T_new, S_new
   element_t T_new, S_new;
@@ -143,6 +75,8 @@ Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
   // Aggregate the signatures
   element_add(T_new, T_new, T_old);
   element_add(S_new, S_new, S_old);
+  // element_printf("T_new: %B\n", T_new);
+  // element_printf("S_new: %B\n", S_new);
 
   element_clear(T_old);
   element_clear(S_old);
@@ -151,22 +85,119 @@ Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
 }
 
 bool IbasSigner::verifySignature(const Data& data) {
-  // TODO: Insert 'From', 'Moderator' parts in sign methods
+  using std::string;
+
+  // Load the aggregated signature
+  const Signature signature = data.getSignature();
+  string w;
+  element_t T_n, S_n;
+  element_init_G1(T_n, pairing);
+  element_init_G1(S_n, pairing);
+  if (!loadSignature(T_n, S_n, w, signature)) {
+    // Could not load signature variables successfully
+    element_clear(T_n);
+    element_clear(S_n);
+    return false;
+  }
+  element_printf("T_n: %B\n", T_n);
+  element_printf("S_n: %B\n", S_n);
+
+  // Compute P_w = H_{2}(w)
+  element_t P_w;
+  element_init_G1(P_w, pairing);
+  util::calculateH2(P_w, w, pairing);
+  element_printf("P_w %B\n", P_w);
 
   // Get message parts and corresponding IDs
   const Block content = data.getContent();
-  const std::string contStr = std::string(content.value_begin(), content.value_end());
-  std::cout << contStr << std::endl;
+  const string contentStr = string(content.value_begin(), content.value_end());
 
-  // Calculate c_{i}s
+  const static string from = "From: ";
+  size_t fromPos = contentStr.find(from);
+  size_t identityEndPos = contentStr.find('\n', fromPos + from.size());
+  string fromIdentity(contentStr,  fromPos + from.size(), identityEndPos - fromPos - from.size());
+
+  const static string moderator = "Moderator: ";
+  size_t moderatorPos = contentStr.find(moderator);
+  assert(moderatorPos == 0);
+  identityEndPos = contentStr.find('\n', moderatorPos + moderator.size());
+  string moderatorIdentity(contentStr,  moderatorPos + moderator.size(),
+                           identityEndPos - moderatorPos - moderator.size());
+
+  // Compute c_i = H_{3}(m_i, ID_i, w)
+  // TODO: c_i does not match with c in sign* methods
+  element_t c_0, c_1;
+  element_init_Zr(c_0, pairing);
+  element_init_Zr(c_1, pairing);
+  util::calculateH3(c_0, string(contentStr, fromPos) + fromIdentity + w, pairing);
+  element_printf("c_0 %B\n", c_0);
+  util::calculateH3(c_1, string(contentStr, moderatorPos) + moderatorIdentity + w, pairing);
+  element_printf("c_1 %B\n", c_1);
 
   // Calculate P_{i,j}s
+  element_t P_0_0;
+  element_t P_0_1;
+  element_t P_1_0;
+  element_t P_1_1;
+  element_init_G1(P_0_0, pairing);
+  element_init_G1(P_0_1, pairing);
+  element_init_G1(P_1_0, pairing);
+  element_init_G1(P_1_1, pairing);
+  util::calculateH1(P_0_0, fromIdentity + "0", pairing);
+  util::calculateH1(P_0_1, fromIdentity + "1", pairing);
+  util::calculateH1(P_1_0, moderatorIdentity + "0", pairing);
+  util::calculateH1(P_1_1, moderatorIdentity + "1", pairing);
 
-  // Load the aggregated signature
+  // Verify signature
+  element_t gtTemp1;
+  element_t gtTemp2;
+  element_t g1Temp1;
+  element_t g1Temp2;
+  element_init_GT(gtTemp1, pairing);
+  element_init_GT(gtTemp2, pairing);
+  element_init_G1(g1Temp1, pairing);
+  element_init_G1(g1Temp2, pairing);
 
-  // Verfiy signature
+  element_pairing(gtTemp1, T_n, P_w); // e(T_{n}, P_{w})
+  element_printf("right1 side %B\n", gtTemp1);
+  element_add(g1Temp1, P_0_0, P_1_0); // P_{0,0} + P_{1,0}
+  element_mul_zn(g1Temp2, P_0_1, c_0); // c_{0}P_{0,1}
+  element_add(g1Temp1, g1Temp1, g1Temp2); // P_{0,0} + P_{1,0} + c_{0}P_{0,1}
+  element_mul_zn(g1Temp2, P_1_1, c_1); // c_{1}P_{1,1}s
+  element_add(g1Temp1, g1Temp1, g1Temp2); // P_{0,0} + P_{1,0} + c_{0}P_{0,1} + c_{1}P_{1,1}
+  element_pairing(gtTemp2, Q, g1Temp1); // e(Q, P_{0,0} + P_{1,0} + c_{0}P_{0,1} + c_{1}P_{1,1})
+  element_printf("right2 side %B\n", gtTemp2);
+  element_mul(gtTemp1, gtTemp1, gtTemp2);
+  element_printf("right side %B\n", gtTemp1);
 
-  return true;
+  element_pairing(gtTemp2, S_n, P); // e(S_{n}, P)
+  element_printf("left side %B\n", gtTemp2);
+
+  bool verified;
+  if (!element_cmp(gtTemp1, gtTemp2)) {
+    verified = true;
+  } else {
+    verified = false;
+  }
+
+  element_clear(P_0_0);
+  element_clear(P_0_1);
+  element_clear(P_1_0);
+  element_clear(P_1_1);
+  element_clear(P_w);
+
+  element_clear(c_0);
+  element_clear(c_1);
+
+  element_clear(T_n);
+  element_clear(S_n);
+
+  element_clear(gtTemp1);
+  element_clear(gtTemp2);
+  element_clear(g1Temp1);
+  element_clear(g1Temp2);
+
+  return verified;
 }
 
 void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
@@ -223,17 +254,17 @@ void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
   while (infile >> param >> value) {
     if (param == "id") {
       identity = value;
-      std::cout << identity << std::endl;
+      std::cout << "Initialized private params with identity: " << identity << std::endl;
     } else if (param == "s_P_0") {
       if (!element_set_str(s_P_0, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read s_P_0 correctly");
       }
-      element_printf("s_P_0: %B\n", s_P_0);
+      // element_printf("s_P_0: %B\n", s_P_0);
     } else if (param == "s_P_1") {
       if (!element_set_str(s_P_1, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read s_P_1 correctly");
       }
-      element_printf("s_P_1: %B\n", s_P_1);
+      // element_printf("s_P_1: %B\n", s_P_1);
     }
   }
 
@@ -254,6 +285,84 @@ const std::string IbasSigner::generateW() {
     res += "0";
   }
   return res;
+}
+
+void IbasSigner::signInternal(element_t T, element_t S, const uint8_t* data, size_t dataLength,
+                              const std::string& w) {
+  element_t P_w;
+  element_t c, r;
+  element_t temp1;
+
+  element_init_G1(P_w, pairing);
+  element_init_Zr(c, pairing);
+  element_init_Zr(r, pairing);
+  element_init_G1(temp1, pairing);
+
+  // Compute P_w = H_{2}(w)
+  util::calculateH2(P_w, w, pairing);
+  // element_printf("P_w %B\n", P_w);
+
+  // Compute C_i = H_{3}(m_i, ID_i, w)
+  util::calculateH3(c, std::string(data, data + dataLength) + identity + w, pairing);
+  element_printf("c %B\n", c);
+
+  element_random(r);
+  // element_printf("r %B\n", r);
+
+  // Compute T_i = r_{i}P
+  element_mul_zn(T, P, r); // T_i = r_{i}P
+  // element_printf("T %B\n", T);
+
+  // Compute S_i = r_{i}P_{w} + sP_{i,0} + c_{i}sP_{i,1}
+  element_mul_zn(S, P_w, r); // r_{i}P_{w}
+  element_mul_zn(temp1, s_P_1, c); // c_{i}sP_{i,1}
+  element_add(S, S, s_P_0);
+  element_add(S, S, temp1);
+  // element_printf("S %B\n", S);
+
+  element_clear(P_w);
+  element_clear(c);
+  element_clear(r);
+  element_clear(temp1);
+}
+
+Block IbasSigner::signIntoBlock(element_t T, element_t S, const std::string& w, bool clear) {
+  // Compress T_i and S_i into unsigned char arrays
+  size_t element_size = element_length_in_bytes_compressed(T); // T and S have same size
+  unsigned char T_compressed[element_size]; // TODO: Find a workaround for the VLA error
+  unsigned char S_compressed[element_size];
+  element_to_bytes_compressed(T_compressed, T);
+  element_to_bytes_compressed(S_compressed, S);
+
+  // Concatenate signature parts
+  BufferPtr buf = std::make_shared<Buffer>();
+  buf->insert(buf->end(), w.begin(), w.end());
+  buf->insert(buf->end(), T_compressed, T_compressed + element_size);
+  buf->insert(buf->end(), S_compressed, S_compressed + element_size);
+
+  if (clear) {
+    element_clear(T);
+    element_clear(S);
+  }
+
+  return Block(tlv::SignatureValue, buf);
+}
+
+bool IbasSigner::loadSignature(element_t T, element_t S, std::string& w,
+                               const Signature& signature) {
+  if (signature.getType() != tlv::SignatureSha256Ibas) {
+    return false;
+  }
+
+  const uint8_t* sig = signature.getValue().value();
+  w = std::string(sig, sig + W_LENGTH);
+  size_t signatureSize = signature.getValue().value_size();
+  size_t element_size = (signatureSize - W_LENGTH) / 2;
+  element_from_bytes_compressed(T, (unsigned char*) (sig + W_LENGTH));
+  element_from_bytes_compressed(S, (unsigned char*) (sig + W_LENGTH + element_size));
+  // element_printf("T: %B\n", T);
+  // element_printf("S: %B\n", S);
+  return true;
 }
 
 } // namespace ndn
