@@ -12,16 +12,34 @@
 
 namespace ndn {
 
+/**
+ * @brief IbasSigner class provides IBAS related sign, verify functions for KeyChain and Validator.
+ *
+ * There are two possible instance states. In one state the instance can only verify data and its
+ * signature; it cannot sign a data. The state can be checked by calling 'canSign()' method.
+ */
 class IbasSigner
 {
  public:
   /**
-   * @param paramsFilePath Path of a file which includes all public parameters of the IBAS scheme
+   * @param publicParamsFilePath Path of a file which includes all public parameters of the IBAS
    * @param privateKeyFilePath Path of file which includes an identity and corresponding private key
    */
-  IbasSigner(const std::string& paramsFilePath, const std::string& privateParamsFilePath);
+  IbasSigner(const std::string& publicParamsFilePath, const std::string& privateParamsFilePath);
+
+  /**
+   * @brief Constructs an instance, in this case the instance cannot sign data. It only can verify.
+   *
+   * @param publicParamsFilePath Path of a file which includes all public parameters of the IBAS
+   */
+  IbasSigner(const std::string& publicParamsFilePath);
 
   ~IbasSigner();
+
+  /**
+   * @brief True if the instance can be used to sign data, false otherwise.
+   */
+  bool canSign();
 
   /**
    * @brief Computes a new IBAS signature of given data
@@ -78,6 +96,7 @@ class IbasSigner
   Block signIntoBlock(element_t T, element_t S, const std::string& w, bool clear);
 
  private:
+  bool m_canSign = false;
   std::string identity;
 
   // Public params

@@ -18,17 +18,27 @@ IbasSigner::IbasSigner(const std::string& publicParamsFilePath,
 
   // Loads the private parameters: (id, s_P_0, s_P_1)
   privateParamsInit(privateParamsFilePath.c_str());
+}
 
-  // The following cast is used frequently in this class
-  static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
+IbasSigner::IbasSigner(const std::string& publicParamsFilePath) {
+  // Loads the public parameters: (G_1, G_2, e, P, Q)
+  publicParamsInit(publicParamsFilePath.c_str());
 }
 
 IbasSigner::~IbasSigner() {
   element_clear(P);
   element_clear(Q);
-  element_clear(s_P_0);
-  element_clear(s_P_1);
+
+  if (m_canSign) {
+    element_clear(s_P_0);
+    element_clear(s_P_1);
+  }
+
   pairing_clear(pairing);
+}
+
+bool IbasSigner::canSign() {
+  return m_canSign;
 }
 
 void IbasSigner::signInternal(element_t T, element_t S, const uint8_t* data, size_t dataLength,
@@ -160,6 +170,9 @@ bool IbasSigner::verifySignature(const Data& data) {
 }
 
 void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
+  // The following cast is used frequently in this class
+  static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
+
   // Read pairing parameters
   char buffer[DEFAULT_PARAMS_FILE_SIZE];
   FILE *fp = fopen(publicParamsFilePath, "r");
@@ -223,6 +236,8 @@ void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
       element_printf("s_P_1: %B\n", s_P_1);
     }
   }
+
+  m_canSign = true;
 
   // //generate private keys, this code was used only once
   // util::generateSecretKeyForIdentit/y("Alice", pairing);

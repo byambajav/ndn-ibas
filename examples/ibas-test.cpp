@@ -45,13 +45,8 @@ namespace ibas {
     keyChain.signAndAggregateIbas(data);
     logData(data);
 
-    // ValidatorIbas validator;
-    // OnInterestValidated onValidated = bind(&ControllerBackend::onInvitationValidated, this, _1);
-    // OnInterestValidationFailed onFailed = bind(&ControllerBackend::onInvitationValidationFailed,
-    //                                            this, _1, _2);
-    // validator.validate(*invitationInterest, onValidated, onFailed);
-
-    ValidatorNull validator;
+    bool verified = Validator::verifySignatureIbas(data);
+    std::cout << std::boolalpha << verified << std::endl;
 
     return data;
   }

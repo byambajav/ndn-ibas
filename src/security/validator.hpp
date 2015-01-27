@@ -103,6 +103,14 @@ public:
    *      verifySignature method set       *
    *****************************************/
 
+  /**
+   * @brief Verify the data using IBAS verification
+   *        The data's content should contain exactly one 'From: <ID>' part, and zero or more
+   *        'Moderator: <ID>' parts.
+   */
+  static bool
+  verifySignatureIbas(const Data& data);
+
   /// @brief Verify the data using the publicKey.
   static bool
   verifySignature(const Data& data, const PublicKey& publicKey);
