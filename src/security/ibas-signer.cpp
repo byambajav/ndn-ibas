@@ -11,6 +11,8 @@ const static int DEFAULT_PARAMS_FILE_SIZE = 16384;
 const static int PARAMS_STORE_BASE = 10; // The PBC library does not work properly if the base is not 10
 const static int W_LENGTH = 20;
 
+/* Constructors and destructor */
+
 IbasSigner::IbasSigner(const std::string& publicParamsFilePath,
                        const std::string& privateParamsFilePath) {
   // Loads the public parameters: (G_1, G_2, e, P, Q)
@@ -36,6 +38,8 @@ IbasSigner::~IbasSigner() {
 
   pairing_clear(pairing);
 }
+
+/* Public methods */
 
 bool IbasSigner::canSign() {
   return m_canSign;
@@ -82,6 +86,16 @@ Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
   element_clear(S_old);
 
   return signIntoBlock(T_new, S_new, w, true /* clear */);
+}
+
+Block IbasSigner::sign(const Data& data) {
+  // TODO: Currently this way of signing ignores Name and Metainfo parts of the data
+  return sign(data.getContent().value(), data.getContent().value_size());
+}
+
+Block IbasSigner::signAndAggregate(const Data& data, const Signature& oldSignature) {
+  // TODO: Currently this way of signing ignores Name and Metainfo parts of the data
+  return signAndAggregate(data.getContent().value(), data.getContent().value_size(), oldSignature);
 }
 
 bool IbasSigner::verifySignature(const Data& data) {
@@ -199,6 +213,8 @@ bool IbasSigner::verifySignature(const Data& data) {
 
   return verified;
 }
+
+/* Private methods */
 
 void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
   // The following cast is used frequently in this class

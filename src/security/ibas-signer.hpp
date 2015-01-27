@@ -59,6 +59,23 @@ class IbasSigner
   Block signAndAggregate(const uint8_t* data, size_t dataLength, const Signature& oldSignature);
 
   /**
+   * @brief Computes a new IBAS signature of given data
+   *        Signature is created from only content part of the data
+   *
+   * @param data The data to sign
+   */
+  Block sign(const Data& data);
+
+  /**
+   * @brief Computes a new IBAS signature by aggregating
+   *        Signature is created from only content part of the data
+   *
+   * @param data The data to sign
+   * @param oldSignature The old signature to aggregate
+   */
+  Block signAndAggregate(const Data& data, const Signature& oldSignature);
+
+  /**
    * @brief Verifies given data
    *
    * @param data The data to verify
