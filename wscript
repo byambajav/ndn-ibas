@@ -61,7 +61,7 @@ def configure(conf):
     conf.check_cryptopp(mandatory=True, use='PTHREAD')
 
     USED_BOOST_LIBS = ['system', 'filesystem', 'date_time', 'iostreams',
-                       'regex', 'program_options', 'chrono', 'random']
+                       'regex', 'program_options', 'chrono', 'random', 'timer']
     if conf.env['WITH_TESTS']:
         USED_BOOST_LIBS += ['unit_test_framework']
         conf.define('HAVE_TESTS', 1)

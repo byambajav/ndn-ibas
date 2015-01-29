@@ -1,5 +1,6 @@
+#include <boost/timer/timer.hpp>
 #include "security/key-chain.hpp"
-#include "security/validator-null.hpp"
+#include "security/validator.hpp"
 
 #define ALICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Alice.id"
 #define GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/GovernmentOffice.id"
@@ -41,13 +42,13 @@ namespace ibas {
     KeyChain keyChain;
     keyChain.initializeIbas(ALICE_PRIVATE_PARAMS_FILE_PATH);
     keyChain.signIbas(data);
-    logData(data);
+    // logData(data);
 
     content.insert(0, "Moderator: GovernmentOffice\n");
     data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
     keyChain.initializeIbas(GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH);
     keyChain.signAndAggregateIbas(data);
-    logData(data);
+    // logData(data);
 
     bool verified = Validator::verifySignatureIbas(data);
     std::cout << std::boolalpha << verified << std::endl;
@@ -59,8 +60,11 @@ namespace ibas {
 
 int main(int argc, char *argv[])
 {
+  boost::timer::auto_cpu_timer t;
   if (argc == 3) {
-    ndn::Data signedData = ibas::createSignAggregateData(argv[1], argv[2]);
+    for (int i = 0; i < 100; ++i) {
+      ibas::createSignAggregateData(argv[1], argv[2]);
+    }
   } else {
     std::cout << argv[0] << " dataName content" << std::endl;
     return 1;

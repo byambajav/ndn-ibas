@@ -29,7 +29,7 @@ void calculateH2(element_t hash, const std::string& str, pairing_t pairing) {
 }
 
 void calculateH3(element_t hash, const std::string& str, pairing_t pairing) {
-  logString(str);
+  // logString(str);
 
   // Calculate SHA256
   const uint8_t *data = reinterpret_cast<const uint8_t*>(str.data());

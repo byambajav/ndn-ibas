@@ -113,14 +113,14 @@ bool IbasSigner::verifySignature(const Data& data) {
     element_clear(S_n);
     return false;
   }
-  element_printf("T_n: %B\n", T_n);
-  element_printf("S_n: %B\n", S_n);
+  // element_printf("T_n: %B\n", T_n);
+  // element_printf("S_n: %B\n", S_n);
 
   // Compute P_w = H_{2}(w)
   element_t P_w;
   element_init_G1(P_w, pairing);
   util::calculateH2(P_w, w, pairing);
-  element_printf("P_w %B\n", P_w);
+  // element_printf("P_w %B\n", P_w);
 
   // Get message parts and corresponding IDs
   const Block content = data.getContent();
@@ -139,14 +139,13 @@ bool IbasSigner::verifySignature(const Data& data) {
                            identityEndPos - moderatorPos - moderator.size());
 
   // Compute c_i = H_{3}(m_i, ID_i, w)
-  // TODO: c_i does not match with c in sign* methods
   element_t c_0, c_1;
   element_init_Zr(c_0, pairing);
   element_init_Zr(c_1, pairing);
   util::calculateH3(c_0, string(contentStr, fromPos) + fromIdentity + w, pairing);
-  element_printf("c_0 %B\n", c_0);
+  // element_printf("c_0 %B\n", c_0);
   util::calculateH3(c_1, string(contentStr, moderatorPos) + moderatorIdentity + w, pairing);
-  element_printf("c_1 %B\n", c_1);
+  // element_printf("c_1 %B\n", c_1);
 
   // Calculate P_{i,j}s
   element_t P_0_0;
@@ -173,19 +172,19 @@ bool IbasSigner::verifySignature(const Data& data) {
   element_init_G1(g1Temp2, pairing);
 
   element_pairing(gtTemp1, T_n, P_w); // e(T_{n}, P_{w})
-  element_printf("right1 side %B\n", gtTemp1);
+  // element_printf("right1 side %B\n", gtTemp1);
   element_add(g1Temp1, P_0_0, P_1_0); // P_{0,0} + P_{1,0}
   element_mul_zn(g1Temp2, P_0_1, c_0); // c_{0}P_{0,1}
   element_add(g1Temp1, g1Temp1, g1Temp2); // P_{0,0} + P_{1,0} + c_{0}P_{0,1}
   element_mul_zn(g1Temp2, P_1_1, c_1); // c_{1}P_{1,1}s
   element_add(g1Temp1, g1Temp1, g1Temp2); // P_{0,0} + P_{1,0} + c_{0}P_{0,1} + c_{1}P_{1,1}
   element_pairing(gtTemp2, Q, g1Temp1); // e(Q, P_{0,0} + P_{1,0} + c_{0}P_{0,1} + c_{1}P_{1,1})
-  element_printf("right2 side %B\n", gtTemp2);
+  // element_printf("right2 side %B\n", gtTemp2);
   element_mul(gtTemp1, gtTemp1, gtTemp2);
-  element_printf("right side %B\n", gtTemp1);
+  // element_printf("right side %B\n", gtTemp1);
 
   element_pairing(gtTemp2, S_n, P); // e(S_{n}, P)
-  element_printf("left side %B\n", gtTemp2);
+  // element_printf("left side %B\n", gtTemp2);
 
   bool verified;
   if (!element_cmp(gtTemp1, gtTemp2)) {
@@ -270,7 +269,7 @@ void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
   while (infile >> param >> value) {
     if (param == "id") {
       identity = value;
-      std::cout << "Initialized private params with identity: " << identity << std::endl;
+      // std::cout << "Initialized private params with identity: " << identity << std::endl;
     } else if (param == "s_P_0") {
       if (!element_set_str(s_P_0, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read s_P_0 correctly");
@@ -320,7 +319,7 @@ void IbasSigner::signInternal(element_t T, element_t S, const uint8_t* data, siz
 
   // Compute C_i = H_{3}(m_i, ID_i, w)
   util::calculateH3(c, std::string(data, data + dataLength) + identity + w, pairing);
-  element_printf("c %B\n", c);
+  // element_printf("c %B\n", c);
 
   element_random(r);
   // element_printf("r %B\n", r);
@@ -345,7 +344,7 @@ void IbasSigner::signInternal(element_t T, element_t S, const uint8_t* data, siz
 Block IbasSigner::signIntoBlock(element_t T, element_t S, const std::string& w, bool clear) {
   // Compress T_i and S_i into unsigned char arrays
   size_t element_size = element_length_in_bytes_compressed(T); // T and S have same size
-  unsigned char T_compressed[element_size]; // TODO: Find a workaround for the VLA error
+  unsigned char T_compressed[element_size];
   unsigned char S_compressed[element_size];
   element_to_bytes_compressed(T_compressed, T);
   element_to_bytes_compressed(S_compressed, S);
