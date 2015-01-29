@@ -49,9 +49,6 @@ const std::string DEFAULT_TPM_SCHEME = "tpm-osxkeychain";
 const std::string DEFAULT_TPM_SCHEME = "tpm-file";
 #endif // defined(NDN_CXX_HAVE_OSX_SECURITY) and defined(NDN_CXX_WITH_OSX_KEYCHAIN)
 
-const std::string DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH =
-  std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
-
 // When static library is used, not everything is compiled into the resulting binary.
 // Therefore, the following standard PIB and TPMs need to be registered here.
 // http://stackoverflow.com/q/9459980/2150331
@@ -211,14 +208,12 @@ KeyChain::initialize(const std::string& pibLocatorUri,
 
   m_tpm = tpmFactory->second.create(tpmLocation);
   m_pib->setTpmLocator(actualTpmLocator);
+  m_ibas = std::unique_ptr<IbasSigner>(new IbasSigner());
 }
 
 void
-KeyChain::initializeIbas(const std::string& privateParamsFilePath) {
-  // Ignore errors for now
-  // TODO: Add initprivate method to IbasSigner, then call only that method from here
-  m_ibas = std::unique_ptr<IbasSigner>(new IbasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH,
-                                                      privateParamsFilePath));
+KeyChain::setIdentityIbas(const std::string& privateParamsFilePath) {
+  m_ibas->setPrivateParams(privateParamsFilePath);
 }
 
 Name

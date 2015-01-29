@@ -256,12 +256,12 @@ public:
   signByIdentity(T& packet, const Name& identityName);
 
   /**
-   * @brief Initializes an IbasSigner
+   * @brief Sets the credentials which is used for IBAS signing
    *
    * @param privateParamsFilePath Path of file which includes an identity and corresponding private key
    */
   void
-  initializeIbas(const std::string& privateParamsFilePath);
+  setIdentityIbas(const std::string& privateParamsFilePath);
 
   /**
    * @brief Sign packet using Identity-Based Aggregate Signatures.

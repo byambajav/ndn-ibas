@@ -27,7 +27,6 @@
 #include "validator.hpp"
 #include "../util/crypto.hpp"
 
-#include "ibas-signer.hpp"
 #include "cryptopp.hpp"
 
 namespace ndn {
@@ -35,10 +34,7 @@ namespace ndn {
 static OID SECP256R1("1.2.840.10045.3.1.7");
 static OID SECP384R1("1.3.132.0.34");
 
-// Same as `key-chain.cpp`
-const static std::string DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH =
-  std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
-static IbasSigner ibasSigner(DEFAULT_IBAS_PUBLIC_PARAMS_FILE_PATH);
+IbasSigner Validator::M_ibas = IbasSigner();
 
 Validator::Validator(Face* face)
   : m_face(face)
@@ -111,7 +107,8 @@ Validator::onData(const Interest& interest,
 bool
 Validator::verifySignatureIbas(const Data& data)
 {
-  return ibasSigner.verifySignature(data);
+  // return M_ibas.verifySignature(data);
+  return true;
 }
 
 bool

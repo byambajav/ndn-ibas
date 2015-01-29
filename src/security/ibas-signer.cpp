@@ -8,23 +8,17 @@
 namespace ndn {
 
 const static int DEFAULT_PARAMS_FILE_SIZE = 16384;
-const static int PARAMS_STORE_BASE = 10; // The PBC library does not work properly if the base is not 10
+const static int PARAMS_STORE_BASE = 10; // The PBC library does not work properly otherwise
 const static int W_LENGTH = 20;
 
 /* Constructors and destructor */
 
-IbasSigner::IbasSigner(const std::string& publicParamsFilePath,
-                       const std::string& privateParamsFilePath) {
-  // Loads the public parameters: (G_1, G_2, e, P, Q)
-  publicParamsInit(publicParamsFilePath.c_str());
+IbasSigner::IbasSigner() {
+  const static std::string publicParamsFilePath =
+      std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
 
-  // Loads the private parameters: (id, s_P_0, s_P_1)
-  privateParamsInit(privateParamsFilePath.c_str());
-}
-
-IbasSigner::IbasSigner(const std::string& publicParamsFilePath) {
   // Loads the public parameters: (G_1, G_2, e, P, Q)
-  publicParamsInit(publicParamsFilePath.c_str());
+  initializePublicParams(publicParamsFilePath);
 }
 
 IbasSigner::~IbasSigner() {
@@ -40,6 +34,40 @@ IbasSigner::~IbasSigner() {
 }
 
 /* Public methods */
+
+// Loads the private parameters: (id, s_P_0, s_P_1)
+void IbasSigner::setPrivateParams(const std::string& privateParamsFilePath) {
+  // If it is first time, init the elements
+  if (!m_canSign) {
+    element_init_G1(s_P_0, pairing);
+    element_init_G1(s_P_1, pairing);
+    m_canSign = true;
+  }
+
+  std::ifstream infile(privateParamsFilePath);
+  std::string param, value;
+  while (infile >> param >> value) {
+    if (param == "id") {
+      identity = value;
+      // std::cout << "Initialized private params with identity: " << identity << std::endl;
+    } else if (param == "s_P_0") {
+      if (!element_set_str(s_P_0, value.c_str(), PARAMS_STORE_BASE)) {
+        pbc_die("Could not read s_P_0 correctly");
+      }
+      // element_printf("s_P_0: %B\n", s_P_0);
+    } else if (param == "s_P_1") {
+      if (!element_set_str(s_P_1, value.c_str(), PARAMS_STORE_BASE)) {
+        pbc_die("Could not read s_P_1 correctly");
+      }
+      // element_printf("s_P_1: %B\n", s_P_1);
+    }
+  }
+
+  // //generate private keys, this code was used only once
+  // util::generateSecretKeyForIdentit/y("Alice", pairing);
+  // util::generateSecretKeyForIdentity("GovernmentOffice", pairing);
+  // util::generateSecretKeyForIdentity("Bob", pairing);
+}
 
 bool IbasSigner::canSign() {
   return m_canSign;
@@ -215,14 +243,14 @@ bool IbasSigner::verifySignature(const Data& data) {
 
 /* Private methods */
 
-void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
+void IbasSigner::initializePublicParams(const std::string& publicParamsFilePath) {
   // The following cast is used frequently in this class
   static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
 
   // Read pairing parameters
   char buffer[DEFAULT_PARAMS_FILE_SIZE];
-  FILE *fp = fopen(publicParamsFilePath, "r");
-  if (!fp) pbc_die("error opening %s", publicParamsFilePath);
+  FILE *fp = fopen(publicParamsFilePath.c_str(), "r");
+  if (!fp) pbc_die("error opening %s", publicParamsFilePath.c_str());
 
   size_t count = fread(buffer, 1, DEFAULT_PARAMS_FILE_SIZE, fp);
   if (!count) pbc_die("input error");
@@ -258,37 +286,6 @@ void IbasSigner::publicParamsInit(const char* publicParamsFilePath) {
   // element_printf("%B\n", P);
   // element_mul_zn(Q, P, s); // Q = sP
   // element_printf("%B\n", Q);
-}
-
-void IbasSigner::privateParamsInit(const char* privateParamsFilePath) {
-  element_init_G1(s_P_0, pairing);
-  element_init_G1(s_P_1, pairing);
-
-  std::ifstream infile(privateParamsFilePath);
-  std::string param, value;
-  while (infile >> param >> value) {
-    if (param == "id") {
-      identity = value;
-      // std::cout << "Initialized private params with identity: " << identity << std::endl;
-    } else if (param == "s_P_0") {
-      if (!element_set_str(s_P_0, value.c_str(), PARAMS_STORE_BASE)) {
-        pbc_die("Could not read s_P_0 correctly");
-      }
-      // element_printf("s_P_0: %B\n", s_P_0);
-    } else if (param == "s_P_1") {
-      if (!element_set_str(s_P_1, value.c_str(), PARAMS_STORE_BASE)) {
-        pbc_die("Could not read s_P_1 correctly");
-      }
-      // element_printf("s_P_1: %B\n", s_P_1);
-    }
-  }
-
-  m_canSign = true;
-
-  // //generate private keys, this code was used only once
-  // util::generateSecretKeyForIdentit/y("Alice", pairing);
-  // util::generateSecretKeyForIdentity("GovernmentOffice", pairing);
-  // util::generateSecretKeyForIdentity("Bob", pairing);
 }
 
 const std::string IbasSigner::generateW() {

@@ -22,19 +22,20 @@ class IbasSigner
 {
  public:
   /**
-   * @param publicParamsFilePath Path of a file which includes all public parameters of the IBAS
-   * @param privateKeyFilePath Path of file which includes an identity and corresponding private key
-   */
-  IbasSigner(const std::string& publicParamsFilePath, const std::string& privateParamsFilePath);
-
-  /**
    * @brief Constructs an instance, in this case the instance cannot sign data. It only can verify.
-   *
-   * @param publicParamsFilePath Path of a file which includes all public parameters of the IBAS
+   *        After calling {@code initializePrivateParams()} the instance can sign data.
    */
-  IbasSigner(const std::string& publicParamsFilePath);
+  IbasSigner();
 
   ~IbasSigner();
+
+  /**
+   * @brief Sets the private params, so that it can sign data using the credentials.
+   *        If the private params were set before it overrides the old params.
+   *
+   * @param privateKeyFilePath Path of file which includes an identity and corresponding private key
+   */
+  void setPrivateParams(const std::string& privateParamsFilePath);
 
   /**
    * @brief True if the instance can be used to sign data, false otherwise.
@@ -86,12 +87,7 @@ class IbasSigner
   /**
    * @brief Initializes the pairing and public params
    */
-  void publicParamsInit(const char* publicParamsFilePath);
-
-  /**
-   * @brief Initializes the private params
-   */
-  void privateParamsInit(const char* privateParamsFilePath);
+  void initializePublicParams(const std::string& publicParamsFilePath);
 
   /**
    * @brief Generates a random w, current time as a string with random padding at end
@@ -123,13 +119,13 @@ class IbasSigner
 
  private:
   bool m_canSign = false;
-  std::string identity;
 
-  // Public params
+  // Public params (public in terms of IBAS)
   pairing_t pairing;
   element_t P, Q;
 
   // Private params
+  std::string identity;
   element_t s_P_0, s_P_1;
 };
 

@@ -40,13 +40,13 @@ namespace ibas {
     data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
 
     KeyChain keyChain;
-    keyChain.initializeIbas(ALICE_PRIVATE_PARAMS_FILE_PATH);
+    keyChain.setIdentityIbas(ALICE_PRIVATE_PARAMS_FILE_PATH);
     keyChain.signIbas(data);
     // logData(data);
 
     content.insert(0, "Moderator: GovernmentOffice\n");
     data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
-    keyChain.initializeIbas(GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH);
+    keyChain.setIdentityIbas(GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH);
     keyChain.signAndAggregateIbas(data);
     // logData(data);
 

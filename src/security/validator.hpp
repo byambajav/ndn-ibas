@@ -34,6 +34,7 @@
 #include "signature-sha256-with-ecdsa.hpp"
 #include "digest-sha256.hpp"
 #include "validation-request.hpp"
+#include "ibas-signer.hpp"
 
 namespace ndn {
 /**
@@ -319,6 +320,8 @@ protected:
 
 protected:
   Face* m_face;
+private:
+  static IbasSigner M_ibas;
 };
 
 } // namespace ndn
