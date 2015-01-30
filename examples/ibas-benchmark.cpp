@@ -2,6 +2,10 @@
 #include "security/key-chain.hpp"
 #include "security/validator.hpp"
 
+#include "publisher.hpp"
+#include "moderator.hpp"
+#include "subscriber.hpp"
+
 #define ALICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Alice.id"
 #define GOVERNMENTOFFICE_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/GovernmentOffice.id"
 #define BOB_PRIVATE_PARAMS_FILE_PATH "/home/denjo/.ndn/ibas/Bob.id"
@@ -60,15 +64,31 @@ namespace ibas {
 
 int main(int argc, char *argv[])
 {
-  boost::timer::auto_cpu_timer t;
-  if (argc == 3) {
-    for (int i = 0; i < 100; ++i) {
-      ibas::createSignAggregateData(argv[1], argv[2]);
-    }
-  } else {
-    std::cout << argv[0] << " dataName content" << std::endl;
-    return 1;
-  }
+  // boost::timer::auto_cpu_timer t;
+  // if (argc == 3) {
+  //   for (int i = 0; i < 100; ++i) {
+  //     ibas::createSignAggregateData(argv[1], argv[2]);
+  //   }
+  // } else {
+  //   std::cout << argv[0] << " dataName content" << std::endl;
+  //   return 1;
+  // }
+
+  ndn::ibas_demo::Publisher alice("/wonderland/Alice/safety-confirmation");
+  ndn::ibas_demo::Moderator governmentOffice("/rendezvous/GovernmentOffice/safety-confirmation");
+  ndn::ibas_demo::Subscriber bob("/wonderland/Bob/safety-confirmation");
+
+  ndn::Data data = alice.publishMessage(0);
+  ndn::ibas_demo::logData(data);
+  governmentOffice.moderateMessage(data);
+  ndn::ibas_demo::logData(data);
+  std::cout << std::boolalpha << bob.verifyMessage(data) << std::endl << std::endl;
+
+  data = alice.publishMessage(0);
+  ndn::ibas_demo::logData(data);
+  governmentOffice.moderateMessage(data);
+  ndn::ibas_demo::logData(data);
+  std::cout << std::boolalpha << bob.verifyMessage(data) << std::endl << std::endl;
 
   return 0;
 }
