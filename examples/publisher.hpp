@@ -30,6 +30,8 @@ class Publisher : noncopyable
     } else {
       std::cout << "Unsupported signature type: " << m_signatureType << std::endl;
     }
+
+    srand(std::time(NULL));
   }
 
   Data publishMessage(size_t messageSize) {
@@ -40,8 +42,9 @@ class Publisher : noncopyable
     Data messageData(messageName);
 
     // Set content
-    std::string message("I am OK."); // TODO: Make it random string with size of messageSize
-    message.insert(0, "From: " + m_name.get(1).toUri() + "\n"); // TODO: Add publish datetime
+    std::string message = generateRandomString(messageSize);
+    message.insert(0, "From: " + m_name.get(1).toUri() + "\n" +
+                   "Published: " + getCurrentTime());
     messageData.setContent(reinterpret_cast<const uint8_t*>(message.c_str()), message.length());
 
     // Sign

@@ -1,6 +1,8 @@
 #ifndef NDN_IBAS_DEMO_HELPER_HPP
 #define NDN_IBAS_DEMO_HELPER_HPP
 
+#include <ctime>
+
 #include "data.hpp"
 
 namespace ndn {
@@ -30,6 +32,25 @@ void logData(const Data& data) {
  */
 const string getPrivateParamsFilePath(const string& identity) {
   return c_paramsFilePathPrefix + identity + ".id";
+}
+
+inline std::string generateRandomString(size_t len) {
+  std::string s(len, 0);
+  static const char alphanum[] =
+      "0123456789     _,.;:"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz";
+
+  for (size_t i = 0; i < len; ++i) {
+    s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+  }
+
+  return s;
+}
+
+inline std::string getCurrentTime() {
+  std::time_t result = std::time(NULL);
+  return std::ctime(&result);
 }
 
 } // namespace ibas_demo

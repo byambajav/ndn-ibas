@@ -19,6 +19,8 @@ IbasSigner::IbasSigner() {
 
   // Loads the public parameters: (G_1, G_2, e, P, Q)
   initializePublicParams(publicParamsFilePath);
+
+  srand(std::time(NULL));
 }
 
 IbasSigner::~IbasSigner() {
@@ -357,9 +359,10 @@ const std::string IbasSigner::generateW() {
   using namespace std::chrono;
   milliseconds ms = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
   std::string res = std::to_string(ms.count());
-  for (int i = res.size(); i < W_LENGTH; i++) {
-    // TODO: it should be random
-    res += "0";
+  int filledSize = res.size();
+  res.resize(W_LENGTH);
+  for (int i = filledSize; i < W_LENGTH; i++) {
+    res.at(i) = rand();
   }
   return res;
 }

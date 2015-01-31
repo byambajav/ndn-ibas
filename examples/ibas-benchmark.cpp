@@ -17,14 +17,16 @@ int main(int argc, char *argv[])
   tlv::SignatureTypeValue signatureType;
   int n;
   size_t loadSize;
+  bool log;
 
-  if (argc != 4) {
-    cout << "Usage: " << argv[0] << " signatureType(1,3,4) n loadSize" << endl;
+  if (argc != 5) {
+    cout << "Usage: " << argv[0] << " signatureType(1,3,4) n loadSize log" << endl;
     return 1;
   } else {
     signatureType = (tlv::SignatureTypeValue) atoi(argv[1]);
     n = atoi(argv[2]);
     loadSize = atoi(argv[3]);
+    log = atoi(argv[4]) == 1;
   }
 
   vector<Data> vData(n);
@@ -32,10 +34,6 @@ int main(int argc, char *argv[])
   Publisher alice("/wonderland/Alice/safety-confirmation", signatureType);
   Moderator governmentOffice("/rendezvous/GovernmentOffice/safety-confirmation");
   Subscriber bob("/wonderland/Bob/safety-confirmation");
-
-  if (signatureType != tlv::SignatureSha256Ibas) {
-    // Set public keys for verifiers
-  }
 
   high_resolution_clock::time_point t0 = high_resolution_clock::now();
   for (int i = 0; i < n; i++) {
@@ -52,6 +50,9 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n; i++) {
     if (!bob.verifyMessage(vData.at(i))) {
       verificationFailed = true;
+    }
+    if (log) {
+      logData(vData.at(i));
     }
   }
   high_resolution_clock::time_point t3 = high_resolution_clock::now();

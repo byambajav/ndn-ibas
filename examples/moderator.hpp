@@ -65,7 +65,8 @@ class Moderator : noncopyable
     // Modify the content
     std::string message = string(messageData.getContent().value_begin(),
                                  messageData.getContent().value_end());
-    message.insert(0, "Moderator: " + m_name.get(1).toUri() + "\n"); // TODO: Add accepted datetime
+    message.insert(0, "Moderator: " + m_name.get(1).toUri() + "\n" +
+                   "Accepted: " + getCurrentTime());
     messageData.setContent(reinterpret_cast<const uint8_t*>(message.c_str()), message.length());
 
     // Sign and aggregate
