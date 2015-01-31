@@ -2,6 +2,7 @@
 #define NDN_IBAS_DEMO_MODERATOR_HPP
 
 #include "security/key-chain.hpp"
+#include "security/validator.hpp"
 #include "ibas-demo-helper.hpp"
 
 namespace ndn {
@@ -21,10 +22,34 @@ class Moderator : noncopyable
   Moderator(const std::string& name) {
     m_name = Name(name);
     m_keyChain.setIdentityIbas(getPrivateParamsFilePath(m_name.get(1).toUri()));
+    m_defaultCertName = m_keyChain.createIdentity(m_name);
+  }
+
+  inline bool verifySignature(const Data& data) {
+    uint32_t signatureType = data.getSignature().getType();
+    if (signatureType == tlv::SignatureSha256Ibas) {
+      return Validator::verifySignatureIbas(data);
+    } else if (signatureType == tlv::SignatureSha256WithRsa) {
+      // Locate publisher's key, then verify
+      Name keyName = m_keyChain.getDefaultKeyNameForIdentity(data.getName().getPrefix(3));
+      shared_ptr<PublicKey> publicKey = m_keyChain.getPublicKey(keyName);
+      return Validator::verifySignature(data, *publicKey);
+    }
+    return false;
+  }
+
+  inline void signData(Data& data) {
+    uint32_t signatureType = data.getSignature().getType();
+    if (signatureType == tlv::SignatureSha256Ibas) {
+      m_keyChain.signAndAggregateIbas(data);
+    } else if (signatureType == tlv::SignatureSha256WithRsa) {
+      // TODO: Add old signature into data's content part
+      m_keyChain.signByIdentity(data, m_name);
+    }
   }
 
   void moderateMessage(Data& messageData) {
-    if (!Validator::verifySignatureIbas(messageData)) {
+    if (!verifySignature(messageData)) {
       std::cout << "Message does not verify!" << std::endl;
       return;
     }
@@ -44,13 +69,15 @@ class Moderator : noncopyable
     messageData.setContent(reinterpret_cast<const uint8_t*>(message.c_str()), message.length());
 
     // Sign and aggregate
-    m_keyChain.signAndAggregateIbas(messageData);
+    signData(messageData);
   }
 
  private:
   Name m_name;
   KeyChain m_keyChain;
   int m_currentSequenceNumber = 0;
+
+  Name m_defaultCertName; // Used for RSA, ECDSA
 };
 
 } // namespace ibas_demo

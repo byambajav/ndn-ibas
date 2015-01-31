@@ -63,6 +63,7 @@ class IbasSigner
    * @brief Computes a new IBAS signature of given data
    *        Signature is created from only content part of the data
    *
+   * @deprecated
    * @param data The data to sign
    */
   Block sign(const Data& data);
@@ -71,6 +72,7 @@ class IbasSigner
    * @brief Computes a new IBAS signature by aggregating
    *        Signature is created from only content part of the data
    *
+   * @deprecated
    * @param data The data to sign
    * @param oldSignature The old signature to aggregate
    */

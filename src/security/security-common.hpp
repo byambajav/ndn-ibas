@@ -40,8 +40,6 @@ enum {
 enum KeyType {
   KEY_TYPE_RSA   = 0,
   KEY_TYPE_ECDSA = 1,
-  KEY_TYPE_IBS = 2,
-  KEY_TYPE_IBAS = 3,
   // KEY_TYPE_DSA,
   KEY_TYPE_AES   = 128,
   // KEY_TYPE_DES,

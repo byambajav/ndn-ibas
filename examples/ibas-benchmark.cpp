@@ -14,22 +14,28 @@ int main(int argc, char *argv[])
   using namespace std;
   using namespace std::chrono;
 
+  tlv::SignatureTypeValue signatureType;
   int n;
   size_t loadSize;
 
-  if (argc != 3) {
-    cout << "Usage: " << argv[0] << " n loadSize" << endl;
+  if (argc != 4) {
+    cout << "Usage: " << argv[0] << " signatureType(1,3,4) n loadSize" << endl;
     return 1;
   } else {
-    n = atoi(argv[1]);
-    loadSize = atoi(argv[2]);
+    signatureType = (tlv::SignatureTypeValue) atoi(argv[1]);
+    n = atoi(argv[2]);
+    loadSize = atoi(argv[3]);
   }
 
   vector<Data> vData(n);
 
-  Publisher alice("/wonderland/Alice/safety-confirmation");
+  Publisher alice("/wonderland/Alice/safety-confirmation", signatureType);
   Moderator governmentOffice("/rendezvous/GovernmentOffice/safety-confirmation");
   Subscriber bob("/wonderland/Bob/safety-confirmation");
+
+  if (signatureType != tlv::SignatureSha256Ibas) {
+    // Set public keys for verifiers
+  }
 
   high_resolution_clock::time_point t0 = high_resolution_clock::now();
   for (int i = 0; i < n; i++) {
@@ -51,7 +57,7 @@ int main(int argc, char *argv[])
   high_resolution_clock::time_point t3 = high_resolution_clock::now();
 
   if (!verificationFailed) {
-    cout << "Verification successfull" << endl;
+    cout << "All verification successfull" << endl;
   } else {
     cout << "Verification failed" << endl;
   }
@@ -63,7 +69,7 @@ int main(int argc, char *argv[])
   cout << "n: " << n << endl;
   cout << "loadSize: " << loadSize << " bytes" << endl;
   cout << "Publish took " << publishDuration.count() << " seconds" << endl;
-  cout << "Aggrgegation took " << aggregationDuration.count() << " seconds" << endl;
+  cout << "Aggregation took " << aggregationDuration.count() << " seconds" << endl;
   cout << "Verification took " << verificationDuration.count() << " seconds" << endl;
 
   return 0;

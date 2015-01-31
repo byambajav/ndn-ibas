@@ -22,11 +22,21 @@ class Subscriber : noncopyable
   }
 
   bool verifyMessage(const Data& messageData) {
-    return Validator::verifySignatureIbas(messageData);
+    uint32_t signatureType = messageData.getSignature().getType();
+    if (signatureType == tlv::SignatureSha256Ibas) {
+      return Validator::verifySignatureIbas(messageData);
+    } else if (signatureType == tlv::SignatureSha256WithRsa) {
+      // Locate moderator's key, then verify
+      Name keyName = m_keyChain.getDefaultKeyNameForIdentity(messageData.getName().getPrefix(3));
+      shared_ptr<PublicKey> publicKey = m_keyChain.getPublicKey(keyName);
+      return Validator::verifySignature(messageData, *publicKey);
+    }
+    return false;
   }
 
  private:
   Name m_name;
+  KeyChain m_keyChain;
 };
 
 } // namespace ibas_demo

@@ -19,7 +19,7 @@ void signRsa(std::string nameString, std::string content) {
 
   // verifying
   Name keyName = keyChain.getDefaultKeyNameForIdentity(identityName);
-  shared_ptr <PublicKey > publicKey = keyChain.getPublicKey(keyName);
+  shared_ptr<PublicKey> publicKey = keyChain.getPublicKey(keyName);
   bool verified = Validator::verifySignature(data, *publicKey);
   std::cout << std::boolalpha << verified << std::endl;
 }
