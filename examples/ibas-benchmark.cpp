@@ -57,21 +57,17 @@ int main(int argc, char *argv[])
   }
   high_resolution_clock::time_point t3 = high_resolution_clock::now();
 
-  if (!verificationFailed) {
-    cout << "All verification successfull" << endl;
-  } else {
-    cout << "Verification failed" << endl;
-  }
-
   duration<double> publishDuration = duration_cast<duration<double>>(t1 - t0);
   duration<double> aggregationDuration = duration_cast<duration<double>>(t2 - t1);
   duration<double> verificationDuration = duration_cast<duration<double>>(t3 - t2);
 
-  cout << "n: " << n << endl;
-  cout << "loadSize: " << loadSize << " bytes" << endl;
-  cout << "Publish took " << publishDuration.count() << " seconds" << endl;
-  cout << "Aggregation took " << aggregationDuration.count() << " seconds" << endl;
-  cout << "Verification took " << verificationDuration.count() << " seconds" << endl;
+  cout << signatureType  << ", ";
+  cout << boolalpha << !verificationFailed << noboolalpha << ", ";
+  cout << n << ", ";
+  cout << loadSize << ", ";
+  cout << publishDuration.count() << ", ";
+  cout << aggregationDuration.count() << ", ";
+  cout << verificationDuration.count() << endl;
 
   return 0;
 }
