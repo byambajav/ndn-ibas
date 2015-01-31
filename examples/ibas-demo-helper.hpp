@@ -21,7 +21,13 @@ void logData(const Data& data) {
   cout <<  "Name: " << data.getName().toUri() << endl;
   cout <<  "Content: " << string(data.getContent().value_begin(),
                                  data.getContent().value_end()) << endl;
-  cout << "Signature value size: " << data.getSignature().getValue().value_size() << endl;
+  cout << "Signature value value_size: " << data.getSignature().getValue().value_size() << endl;
+  cout << "Signature info " << string(data.getSignature().getInfo().wire(),
+                                       data.getSignature().getInfo().wire() +
+                                       data.getSignature().getInfo().size()) << endl;
+  cout << "Signature value " << string(data.getSignature().getValue().wire(),
+                                       data.getSignature().getValue().wire() +
+                                       data.getSignature().getValue().size()) << endl;
   cout << endl;
 }
 

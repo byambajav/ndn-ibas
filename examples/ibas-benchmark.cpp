@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   vector<Data> vData(n);
 
   Publisher alice("/wonderland/Alice/safety-confirmation", signatureType);
-  Moderator governmentOffice("/rendezvous/GovernmentOffice/safety-confirmation");
+  Moderator governmentOffice("/moderators/GovernmentOffice/safety-confirmation");
   Subscriber bob("/wonderland/Bob/safety-confirmation");
 
   high_resolution_clock::time_point t0 = high_resolution_clock::now();

@@ -220,7 +220,6 @@ bool IbasSigner::verifySignature(const Data& data) {
 
   const static string moderator = "Moderator: ";
   size_t moderatorPos = contentStr.find(moderator);
-  // assert(moderatorPos == 0);
   identityEndPos = contentStr.find('\n', moderatorPos + moderator.size());
   string moderatorIdentity(contentStr,  moderatorPos + moderator.size(),
                            identityEndPos - moderatorPos - moderator.size());

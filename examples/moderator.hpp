@@ -38,12 +38,19 @@ class Moderator : noncopyable
     return false;
   }
 
-  inline void signData(Data& data) {
+  inline void signData(Data& data, std::string& content) {
     uint32_t signatureType = data.getSignature().getType();
     if (signatureType == tlv::SignatureSha256Ibas) {
+      data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
       m_keyChain.signAndAggregateIbas(data);
     } else if (signatureType == tlv::SignatureSha256WithRsa) {
-      // TODO: Add old signature into data's content part
+      // Append old signature into data's content part
+      content.append("\nSignature:");
+      content.append((const char*) data.getSignature().getInfo().wire(),
+                     data.getSignature().getInfo().size());
+      content.append((const char*) data.getSignature().getValue().wire(),
+                     data.getSignature().getValue().size());
+      data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
       m_keyChain.signByIdentity(data, m_name);
     }
   }
@@ -67,10 +74,9 @@ class Moderator : noncopyable
                                  messageData.getContent().value_end());
     message.insert(0, "Moderator: " + m_name.get(1).toUri() + "\n" +
                    "Accepted: " + getCurrentTime());
-    messageData.setContent(reinterpret_cast<const uint8_t*>(message.c_str()), message.length());
 
     // Sign and aggregate
-    signData(messageData);
+    signData(messageData, message);
   }
 
  private:
