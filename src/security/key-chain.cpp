@@ -606,8 +606,8 @@ KeyChain::signPacketWrapperIbas(Data& data, const Signature& signature)
   EncodingBuffer encoder;
   data.wireEncode(encoder, true);
 
-  // Block signatureValue = m_ibas->sign(encoder.buf(), encoder.size());
-  Block signatureValue = m_ibas->sign(data);
+  Block signatureValue = m_ibas->sign(encoder.buf(), encoder.size());
+  // Block signatureValue = m_ibas->sign(data);
   data.wireEncode(encoder, signatureValue);
 }
 
@@ -620,8 +620,8 @@ KeyChain::signAndAggregatePacketWrapperIbas(Data& data, const Signature& signatu
   EncodingBuffer encoder;
   data.wireEncode(encoder, true);
 
-  // Block signatureValue = m_ibas->signAndAggregate(encoder.buf(), encoder.size(), oldSignature);
-  Block signatureValue = m_ibas->signAndAggregate(data, oldSignature);
+  Block signatureValue = m_ibas->signAndAggregate(encoder.buf(), encoder.size(), oldSignature);
+  // Block signatureValue = m_ibas->signAndAggregate(data, oldSignature);
   data.wireEncode(encoder, signatureValue);
 }
 

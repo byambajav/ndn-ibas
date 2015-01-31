@@ -321,7 +321,7 @@ protected:
 protected:
   Face* m_face;
 private:
-  static IbasSigner M_ibas;
+  static IbasSigner s_ibas;
 };
 
 } // namespace ndn

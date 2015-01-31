@@ -34,7 +34,7 @@ namespace ndn {
 static OID SECP256R1("1.2.840.10045.3.1.7");
 static OID SECP384R1("1.3.132.0.34");
 
-IbasSigner Validator::M_ibas = IbasSigner();
+IbasSigner Validator::s_ibas = IbasSigner();
 
 Validator::Validator(Face* face)
   : m_face(face)
@@ -107,8 +107,7 @@ Validator::onData(const Interest& interest,
 bool
 Validator::verifySignatureIbas(const Data& data)
 {
-  // return M_ibas.verifySignature(data);
-  return true;
+  return s_ibas.verifySignature(data);
 }
 
 bool

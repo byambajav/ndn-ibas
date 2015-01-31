@@ -117,12 +117,12 @@ Block IbasSigner::signAndAggregate(const uint8_t* data, size_t dataLength,
 }
 
 Block IbasSigner::sign(const Data& data) {
-  // TODO: Currently this way of signing ignores Name and Metainfo parts of the data
+  // This way of signing ignores Name and Metainfo parts of the data
   return sign(data.getContent().value(), data.getContent().value_size());
 }
 
 Block IbasSigner::signAndAggregate(const Data& data, const Signature& oldSignature) {
-  // TODO: Currently this way of signing ignores Name and Metainfo parts of the data
+  // This way of signing ignores Name and Metainfo parts of the data
   return signAndAggregate(data.getContent().value(), data.getContent().value_size(), oldSignature);
 }
 
@@ -161,18 +161,33 @@ bool IbasSigner::verifySignature(const Data& data) {
 
   const static string moderator = "Moderator: ";
   size_t moderatorPos = contentStr.find(moderator);
-  assert(moderatorPos == 0);
+  // assert(moderatorPos == 0);
   identityEndPos = contentStr.find('\n', moderatorPos + moderator.size());
   string moderatorIdentity(contentStr,  moderatorPos + moderator.size(),
                            identityEndPos - moderatorPos - moderator.size());
+
+  // Rebuild previous (pre-moderation) data
+  const Name name = data.getName();
+  Name previousName = name.getSubName(3, 2).append(name.get(2)).append(name.get(5));
+  Data previousData(previousName);
+  previousData.setContent(reinterpret_cast<const uint8_t*>(contentStr.c_str() + fromPos),
+                          contentStr.size() - fromPos);
+  previousData.setSignature(data.getSignature()); // Just to make SignatureInfo same
+  EncodingBuffer encoder;
+  previousData.wireEncode(encoder, true);
 
   // Compute c_i = H_{3}(m_i, ID_i, w)
   element_t c_0, c_1;
   element_init_Zr(c_0, pairing);
   element_init_Zr(c_1, pairing);
-  util::calculateH3(c_0, string(contentStr, fromPos) + fromIdentity + w, pairing);
+  util::calculateH3(c_0, std::string(encoder.buf(), encoder.buf() + encoder.size())
+                    + fromIdentity + w, pairing);
   // element_printf("c_0 %B\n", c_0);
-  util::calculateH3(c_1, string(contentStr, moderatorPos) + moderatorIdentity + w, pairing);
+  util::calculateH3(c_1, string(data.wireEncode().value(),
+                                data.wireEncode().value() + data.wireEncode().value_size() -
+                                data.getSignature().getValue().size())
+                    + moderatorIdentity + w, pairing);
+
   // element_printf("c_1 %B\n", c_1);
 
   // Calculate P_{i,j}s
