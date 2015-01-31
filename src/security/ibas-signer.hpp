@@ -85,6 +85,13 @@ class IbasSigner
 
  private:
   /**
+   * @brief Verify non-moderated data signature, i.e., the data starts with 'From: '
+   */
+  bool verifySignatureSimple(element_t T, element_t S, element_t P_w,
+                             const std::string& w, const std::string& identity,
+                             const Data& data);
+
+  /**
    * @brief Initializes the pairing and public params
    */
   void initializePublicParams(const std::string& publicParamsFilePath);

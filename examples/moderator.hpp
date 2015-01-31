@@ -24,6 +24,11 @@ class Moderator : noncopyable
   }
 
   void moderateMessage(Data& messageData) {
+    if (!Validator::verifySignatureIbas(messageData)) {
+      std::cout << "Message does not verify!" << std::endl;
+      return;
+    }
+
     // Change name of the data
     // Message name is of format: "/org/id/app/publisherOrg/publisherId/messageId/seqNum"
     Name moderatedMessageName = m_name;
