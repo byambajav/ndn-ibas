@@ -11,7 +11,7 @@ const static int DEFAULT_PARAMS_FILE_SIZE = 16384;
 const static int PARAMS_STORE_BASE = 10; // The PBC library does not work properly otherwise
 const static int W_LENGTH = 20;
 
-/* Constructors and destructor */
+/* Constructor and destructor */
 
 IbasSigner::IbasSigner() {
   const static std::string publicParamsFilePath =
