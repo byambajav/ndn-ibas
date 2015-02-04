@@ -78,6 +78,7 @@ class Subscriber : noncopyable
       previousData.setContent(reinterpret_cast<const uint8_t*>(contentStr.c_str() + fromPos),
                               signaturePlaceholderPos - fromPos);
       previousData.setSignature(subscriberSignature);
+      previousData.setFreshnessPeriod(data.getFreshnessPeriod());
 
       // verify subscriber's signature
       keyName = m_keyChain.getDefaultKeyNameForIdentity(previousName.getPrefix(3));
@@ -91,6 +92,7 @@ class Subscriber : noncopyable
  private:
   void onData(const Interest& interest, const Data& data) {
     std::cout << "Received" << std::endl << data << std::endl;
+    std::cout << std::boolalpha << verifyMessage(data) << std::endl;
   }
 
   void onTimeout(const Interest& interest) {

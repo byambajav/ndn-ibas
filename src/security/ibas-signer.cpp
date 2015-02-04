@@ -231,6 +231,7 @@ bool IbasSigner::verifySignature(const Data& data) {
   previousData.setContent(reinterpret_cast<const uint8_t*>(contentStr.c_str() + fromPos),
                           contentStr.size() - fromPos);
   previousData.setSignature(data.getSignature()); // Just to make SignatureInfo same
+  previousData.setFreshnessPeriod(data.getFreshnessPeriod());
   EncodingBuffer encoder;
   previousData.wireEncode(encoder, true);
 
