@@ -1,6 +1,8 @@
 #ifndef NDN_IBAS_DEMO_SUBSCRIBER_HPP
 #define NDN_IBAS_DEMO_SUBSCRIBER_HPP
 
+#include "face.hpp"
+#include "security/key-chain.hpp"
 #include "security/validator.hpp"
 #include "ibas-demo-helper.hpp"
 
@@ -18,8 +20,24 @@ class Subscriber : noncopyable
    *
    * @param name It must be of "/organization/identity/application" format
    */
-  Subscriber(const std::string& name) {
+  Subscriber(const std::string& name, const std::string& interestName) {
     m_name = Name(name);
+    m_interestName = Name(interestName);
+  }
+
+  void run() {
+    Interest interest(m_interestName);
+    interest.setInterestLifetime(time::milliseconds(1000));
+    interest.setMustBeFresh(true);
+
+    m_face.expressInterest(interest,
+                           bind(&Subscriber::onData, this,  _1, _2),
+                           bind(&Subscriber::onTimeout, this, _1));
+
+    std::cout << "Sending" << std::endl << interest << std::endl;
+
+    // processEvents will block until the requested data received or timeout occurs
+    m_face.processEvents();
   }
 
   bool verifyMessage(const Data& data) {
@@ -31,6 +49,7 @@ class Subscriber : noncopyable
       Name keyName = m_keyChain.getDefaultKeyNameForIdentity(data.getName().getPrefix(3));
       shared_ptr<PublicKey> publicKey = m_keyChain.getPublicKey(keyName);
       if (!Validator::verifySignature(data, *publicKey)) {
+        std::cout << "Could not verify the modereator's signature" << std::endl;
         return false;
       }
 
@@ -70,8 +89,19 @@ class Subscriber : noncopyable
   }
 
  private:
+  void onData(const Interest& interest, const Data& data) {
+    std::cout << "Received" << std::endl << data << std::endl;
+  }
+
+  void onTimeout(const Interest& interest) {
+    std::cout << "Timeout " << interest << std::endl;
+  }
+
+ private:
   Name m_name;
+  Name m_interestName;
   KeyChain m_keyChain;
+  Face m_face;
 };
 
 } // namespace ibas_demo

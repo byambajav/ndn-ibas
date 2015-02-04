@@ -29,44 +29,45 @@ int main(int argc, char *argv[])
     log = atoi(argv[4]) == 1;
   }
 
-  vector<Data> vData(n);
+  vector<shared_ptr<Data> > vData(n);
 
-  Publisher alice("/wonderland/Alice/safety-confirmation", signatureType);
+  Publisher alice("/wonderland/Alice/safety-confirmation", signatureType, loadSize);
   Moderator governmentOffice("/moderators/GovernmentOffice/safety-confirmation");
-  Subscriber bob("/wonderland/Bob/safety-confirmation");
+  Subscriber bob("/wonderland/Bob/safety-confirmation",
+                 "/moderators/GovernmentOffice/safety-confirmation/wonderland/Alice");
 
-  high_resolution_clock::time_point t0 = high_resolution_clock::now();
+  steady_clock::time_point t0 = steady_clock::now();
   for (int i = 0; i < n; i++) {
-    vData.at(i) = alice.publishMessage(loadSize);
+    vData.at(i) = alice.createMessage();
   }
 
-  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+  steady_clock::time_point t1 = steady_clock::now();
   for (int i = 0; i < n; i++) {
-    governmentOffice.moderateMessage(vData.at(i));
+    governmentOffice.moderateMessage(*vData.at(i));
   }
 
-  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  steady_clock::time_point t2 = steady_clock::now();
   bool verificationFailed = false;
   for (int i = 0; i < n; i++) {
-    if (!bob.verifyMessage(vData.at(i))) {
+    if (!bob.verifyMessage(*vData.at(i))) {
       verificationFailed = true;
     }
     if (log) {
-      logData(vData.at(i));
+      logData(*vData.at(i));
     }
   }
-  high_resolution_clock::time_point t3 = high_resolution_clock::now();
+  steady_clock::time_point t3 = steady_clock::now();
 
   duration<double> publishDuration = duration_cast<duration<double>>(t1 - t0);
   duration<double> aggregationDuration = duration_cast<duration<double>>(t2 - t1);
   duration<double> verificationDuration = duration_cast<duration<double>>(t3 - t2);
 
-  cout << signatureType  << ", ";
-  cout << boolalpha << !verificationFailed << noboolalpha << ", ";
-  cout << n << ", ";
-  cout << loadSize << ", ";
-  cout << publishDuration.count() << ", ";
-  cout << aggregationDuration.count() << ", ";
+  cout << signatureType  << ",";
+  cout << boolalpha << !verificationFailed << noboolalpha << ",";
+  cout << n << ",";
+  cout << loadSize << ",";
+  cout << publishDuration.count() << ",";
+  cout << aggregationDuration.count() << ",";
   cout << verificationDuration.count() << endl;
 
   return 0;
