@@ -63,19 +63,19 @@ class Moderator : noncopyable
 
  private:
   void onData(const Interest& interest, const Data& data) {
-    std::cout << ">> D" << std::endl << data << std::endl;
+    // std::cout << ">> D" << std::endl << data << std::endl;
 
     // Verify and moderate the received Data
     shared_ptr<Data> moderatedData = make_shared<Data>(data);
     moderateMessage(*moderatedData);
 
     // Send it out to the requesting subscriber(s)
-    std::cout << "<< D" << std::endl << *moderatedData << std::endl;
+    // std::cout << "<< D" << std::endl << *moderatedData << std::endl;
     m_face.put(*moderatedData);
   }
 
   void onInterest(const InterestFilter& filter, const Interest& interest) {
-    std::cout << ">> I" << std::endl << interest << std::endl;
+    // std::cout << ">> I" << std::endl << interest << std::endl;
 
     // Create a Interest based on the received Interest's name
     Name outInterestName = interest.getName().getSubName(3, 2)
@@ -89,7 +89,7 @@ class Moderator : noncopyable
                            bind(&Moderator::onData, this,  _1, _2),
                            bind(&Moderator::onTimeout, this, _1));
 
-    std::cout << "<< I" << std::endl << outInterest << std::endl;
+    // std::cout << "<< I" << std::endl << outInterest << std::endl;
   }
 
   void onRegisterFailed(const Name& prefix, const std::string& reason) {

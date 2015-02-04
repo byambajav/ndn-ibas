@@ -59,7 +59,7 @@ class Publisher : noncopyable
     std::string message = generateRandomString(messageSize);
     message.insert(0, "From: " + m_name.get(1).toUri() + "\n" +
                    "Published: " + getCurrentTime());
-    messageData->setFreshnessPeriod(time::milliseconds(1000));
+    messageData->setFreshnessPeriod(time::milliseconds(0));
     messageData->setContent(reinterpret_cast<const uint8_t*>(message.c_str()), message.length());
 
     // Sign
@@ -74,13 +74,13 @@ class Publisher : noncopyable
 
  private:
   void onInterest(const InterestFilter& filter, const Interest& interest) {
-    std::cout << ">> I" << std::endl << interest << std::endl;
+    // std::cout << ">> I" << std::endl << interest << std::endl;
 
     // Create a signed Data packet
     shared_ptr<Data> data = createMessage();
 
     // Return the Data packet to the requester
-    std::cout << "<< D" << std::endl << *data << std::endl;
+    // std::cout << "<< D" << std::endl << *data << std::endl;
     m_face.put(*data);
   }
 
