@@ -1,30 +1,11 @@
-ndn-cxx: NDN C++ library with eXperimental eXtensions
-=====================================================
+ndn-cxx fork with IBAS support
+==============================
 
-ndn-cxx is a C++ library, implementing Named Data Networking (NDN) primitives that can be
-used to implement various NDN applications.  The library is currently being used as part
-of the following projects:
+This is a forked version of ndn-cxx with support for [Identity-Based Aggregate Signatures (IBAS)](http://iacr.org/archive/pkc2006/39580260/39580260.pdf).
+Cryptography routines of the IBAS was implemented using [PBC Library](http://crypto.stanford.edu/pbc/).
 
-* [NFD - NDN Forwarding Daemon](https://github.com/named-data/NFD)
-* [NLSR - Named-data Link-State Routing protocol](https://github.com/named-data/NLSR)
-* [repo-ng - Next generation of NDN repository](https://github.com/named-data/repo-ng)
-* [ChronoChat - Multi-user NDN chat application](https://github.com/named-data/ChronoChat)
-* [ChronoSync - Sync library for multiuser realtime applications for NDN](https://github.com/named-data/ChronoSync)
-* [ndn-tlv-ping - Ping Application For NDN](https://github.com/named-data/ndn-tlv-ping)
-* [ndn-traffic-generator - Traffic Generator For NDN](https://github.com/named-data/ndn-traffic-generator)
+It is intented only for experimental purposes and implementation design was not carried out with reuse and distribution in mind.
 
-See the file [`docs/INSTALL.rst`](https://github.com/cawka/ndn-cxx/blob/master/docs/INSTALL.rst)
-for build and install instructions.
+## More Information
 
-Please submit any bugs or issues to the ndn-cxx issue tracker:
-http://redmine.named-data.net/projects/ndn-cxx/issues
-
-## More documentation
-
-Extensive documentation of the library is available on the library's homepage:
-http://www.named-data.net/doc/ndn-cxx/
-
-## License
-
-ndn-cxx is an open source project licensed under LGPL 3.0 license. For more information about
-the license, refer to [`COPYING.md`](https://github.com/named-data/ndn-cxx/blob/master/COPYING.md).
+For more information about the original [ndn-cxx](https://github.com/named-data/ndn-cxx) library, refer to README-old.md file.

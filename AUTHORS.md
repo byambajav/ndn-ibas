@@ -31,3 +31,6 @@ in the library:
 * Mathias Gibbens       <gibmat@cs.arizona.edu>
 * Chengyu Fan           <chengyu@cs.colostate.edu>
 * Qiuhan Ding           <http://irl.cs.ucla.edu/~qiuhanding/>
+
+## IBAS experimental implementation
+* Byambajav Namsraijav  <http://byambajav.com/>

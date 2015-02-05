@@ -20,6 +20,7 @@
  *
  * @author Yingdi Yu <http://irl.cs.ucla.edu/~yingdi/>
  * @author Jeff Thompson <jefft0@remap.ucla.edu>
+ * @author Byambajav Namsraijav  <http://byambajav.com/>
  */
 
 #ifndef NDN_SECURITY_VALIDATOR_HPP

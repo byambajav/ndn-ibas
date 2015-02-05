@@ -1,3 +1,25 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/**
+ * Copyright (c) 2015 Regents of the University of Tokyo.
+ *
+ * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
+ *
+ * ndn-cxx library is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * ndn-cxx library is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ *
+ * You should have received copies of the GNU General Public License and GNU Lesser
+ * General Public License along with ndn-cxx, e.g., in COPYING.md file.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ *
+ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
+ * @author Byambajav Namsraijav  <http://byambajav.com/>
+ */
+
 #ifndef NDN_IBAS_DEMO_HELPER_HPP
 #define NDN_IBAS_DEMO_HELPER_HPP
 
@@ -30,6 +52,20 @@ void logData(const Data& data) {
                                        data.getSignature().getValue().size()) << endl;
   cout << endl;
 }
+
+/**
+ * @brief Logs data packets size details
+ */
+void logDataSizes(const Data& data) {
+  cout << "Name: " << data.getName().wireEncode().size() << endl;
+  cout << "MetaInfo: " << data.getMetaInfo().wireEncode().size() << endl;
+  cout << "Content: " << data.getContent().size() << endl;
+  cout << "Signature info: " << data.getSignature().getInfo().size() << endl;
+  cout << "Signature value: " << data.getSignature().getValue().size() << endl;
+  cout << "Total: " << data.wireEncode().size() << endl;
+  cout << endl;
+}
+
 
 /**
  * @brief Gets private params file path

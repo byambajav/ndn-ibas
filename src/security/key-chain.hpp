@@ -19,6 +19,7 @@
  * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
  *
  * @author Yingdi Yu <http://irl.cs.ucla.edu/~yingdi/>
+ * @author Byambajav Namsraijav  <http://byambajav.com/>
  */
 
 #ifndef NDN_SECURITY_KEY_CHAIN_HPP
