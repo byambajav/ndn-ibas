@@ -60,6 +60,10 @@ class IbasSigner
    */
   void setPrivateParams(const std::string& privateParamsFilePath);
 
+  void setupPublicParams();
+
+  void setupPrivateParam(const std::string& identity);
+
   /**
    * @brief True if the instance can be used to sign data, false otherwise.
    */

@@ -366,17 +366,45 @@ void IbasSigner::initializePublicParams(const std::string& publicParamsFilePath)
       }
     }
   }
-
-  // //generate secret key, this code was used only once to generate the parameters
-  // element_t s;
-  // element_init_Zr(s, pairing);
-  // element_random(s);
-  // element_printf("%B\n", s);
-  // element_random(P);
-  // element_printf("%B\n", P);
-  // element_mul_zn(Q, P, s); // Q = sP
-  // element_printf("%B\n", Q);
 }
+
+void IbasSigner::setupPublicParams() {
+  const static std::string publicParamsFilePath =
+    std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
+
+  // The following cast is used frequently in this class
+  static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
+
+  // Read pairing parameters
+  char buffer[DEFAULT_PARAMS_FILE_SIZE];
+  FILE *fp = fopen(publicParamsFilePath.c_str(), "r");
+  if (!fp) pbc_die("error opening %s", publicParamsFilePath.c_str());
+
+  size_t count = fread(buffer, 1, DEFAULT_PARAMS_FILE_SIZE, fp);
+  if (!count) pbc_die("input error");
+  fclose(fp);
+
+  if (pairing_init_set_buf(pairing, buffer, count)) pbc_die("pairing init failed");
+  if (!pairing_is_symmetric(pairing)) pbc_die("pairing must be symmetric");
+
+  // Read P and Q using ifstream, since that is the easier way in C++
+  element_init_G1(P, pairing);
+  element_init_G1(Q, pairing);
+
+  //generate secret key, this code was used only once to generate the parameters
+  element_t s;
+  element_init_Zr(s, pairing);
+  element_random(s);
+  element_printf("s %B\n", s);
+  element_random(P);
+  element_printf("P %B\n", P);
+  element_mul_zn(Q, P, s); // Q = sP
+  element_printf("Q %B\n", Q);
+}
+
+  void IbasSigner::setupPrivateParam(const std::string& identity) {
+    util::generateSecretKeyForIdentity(identity, pairing);
+  }
 
 const std::string IbasSigner::generateW() {
   using namespace std::chrono;

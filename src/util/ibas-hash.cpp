@@ -66,14 +66,16 @@ void generateSecretKeyForIdentity(const std::string& identity, pairing_t pairing
   element_t s;
   element_init_Zr(s, pairing);
 
-  std::ifstream infile("/home/denjo/.ndn/ibas/params.secret");
+  const static std::string privateParamsFilePath =
+    std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.secret");
+  std::ifstream infile(privateParamsFilePath);
   std::string param, value;
   while (infile >> param >> value) {
     if (param == "s") {
       if (!element_set_str(s, value.c_str(), 10)) {
         pbc_die("Could not read s correctly");
       }
-      element_printf("s: %B\n", s);
+      // element_printf("s: %B\n", s);
     }
   }
 
@@ -91,8 +93,8 @@ void generateSecretKeyForIdentity(const std::string& identity, pairing_t pairing
   element_mul_zn(s_P_0, P_0, s);
   element_mul_zn(s_P_1, P_1, s);
 
-  element_printf("s_P_0: %B\n", s_P_0);
-  element_printf("s_P_1: %B\n", s_P_1);
+  element_printf("s_P_0 %B\n", s_P_0);
+  element_printf("s_P_1 %B\n", s_P_1);
 
   element_clear(s);
   element_clear(P_0);

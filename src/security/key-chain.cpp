@@ -217,6 +217,16 @@ KeyChain::setIdentityIbas(const std::string& privateParamsFilePath) {
   m_ibas->setPrivateParams(privateParamsFilePath);
 }
 
+  void
+  KeyChain::setupPublicParamsIbas() {
+    m_ibas->setupPublicParams();
+  }
+
+  void
+  KeyChain::setupPrivateParamIbas(const std::string& identity) {
+    m_ibas->setupPrivateParam(identity);
+  }
+
 Name
 KeyChain::createIdentity(const Name& identityName, const KeyParams& params)
 {

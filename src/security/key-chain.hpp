@@ -264,6 +264,12 @@ public:
   void
   setIdentityIbas(const std::string& privateParamsFilePath);
 
+  void
+  setupPublicParamsIbas();
+
+  void
+  setupPrivateParamIbas(const std::string& identity);
+
   /**
    * @brief Sign packet using Identity-Based Aggregate Signatures.
    *
