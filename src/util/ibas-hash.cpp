@@ -62,13 +62,15 @@ void calculateH3(element_t hash, const std::string& str, pairing_t pairing) {
 }
 
 void generateSecretKeyForIdentity(const std::string& identity, pairing_t pairing) {
-  std::cout << "Generating secret keys for: " << identity << std::endl;
+  std::cout << "Generating private parameters for: " << identity << std::endl;
   element_t s;
   element_init_Zr(s, pairing);
 
-  const static std::string privateParamsFilePath =
+  const static std::string pkgSecretParamsFilePath =
     std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.secret");
-  std::ifstream infile(privateParamsFilePath);
+  const static std::string userPrivateParamsFilePath =
+    std::string(getenv("HOME")) + std::string("/.ndn/ibas/") + identity + std::string(".id");
+  std::ifstream infile(pkgSecretParamsFilePath);
   std::string param, value;
   while (infile >> param >> value) {
     if (param == "s") {
@@ -78,6 +80,9 @@ void generateSecretKeyForIdentity(const std::string& identity, pairing_t pairing
       // element_printf("s: %B\n", s);
     }
   }
+
+  FILE *userPrivateParamsFile = fopen(userPrivateParamsFilePath.c_str(), "w");
+  fprintf(userPrivateParamsFile, "id %s\n", identity.c_str());
 
   element_t P_0;
   element_t P_1;
@@ -93,14 +98,17 @@ void generateSecretKeyForIdentity(const std::string& identity, pairing_t pairing
   element_mul_zn(s_P_0, P_0, s);
   element_mul_zn(s_P_1, P_1, s);
 
-  element_printf("s_P_0 %B\n", s_P_0);
-  element_printf("s_P_1 %B\n", s_P_1);
+  element_fprintf(userPrivateParamsFile, "s_P_0 %B\n", s_P_0);
+  element_fprintf(userPrivateParamsFile, "s_P_1 %B\n", s_P_1);
 
   element_clear(s);
   element_clear(P_0);
   element_clear(P_1);
   element_clear(s_P_0);
   element_clear(s_P_1);
+
+  fclose(userPrivateParamsFile);
+  std::cout << "Stored private parameters at: " << userPrivateParamsFilePath << std::endl;
 }
 
 } // namespace util

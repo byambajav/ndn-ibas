@@ -70,16 +70,20 @@ void IbasSigner::setPrivateParams(const std::string& privateParamsFilePath) {
   }
 
   std::ifstream infile(privateParamsFilePath);
-  std::string param, value;
+  std::string param, value, value2;
   while (infile >> param >> value) {
     if (param == "id") {
       identity = value;
       // std::cout << "Initialized private params with identity: " << identity << std::endl;
     } else if (param == "s_P_0") {
+      infile >> value2;
+      value += value2;
       if (!element_set_str(s_P_0, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read s_P_0 correctly");
       }
     } else if (param == "s_P_1") {
+      infile >> value2;
+      value += value2;
       if (!element_set_str(s_P_1, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read s_P_1 correctly");
       }
@@ -354,13 +358,17 @@ void IbasSigner::initializePublicParams(const std::string& publicParamsFilePath)
   element_init_G1(Q, pairing);
 
   std::ifstream infile(publicParamsFilePath);
-  std::string param, value;
+  std::string param, value, value2;
   while (infile >> param >> value) {
     if (param == "P") {
+      infile >> value2;
+      value += value2;
       if (!element_set_str(P, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read P correctly");
       }
     } else if (param == "Q") {
+      infile >> value2;
+      value += value2;
       if (!element_set_str(Q, value.c_str(), PARAMS_STORE_BASE)) {
         pbc_die("Could not read Q correctly");
       }
@@ -371,8 +379,11 @@ void IbasSigner::initializePublicParams(const std::string& publicParamsFilePath)
 void IbasSigner::setupPkgParams() {
   const static std::string publicParamsFilePath =
     std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
+  const static std::string secretParamsFilePath =
+    std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.secret");
 
   // The following cast is used frequently in this class
+  // Todo: Refactor to remove duplicate code
   static_assert(std::is_same<unsigned char, uint8_t>::value, "uint8_t is not unsigned char");
 
   // Read pairing parameters
@@ -387,19 +398,27 @@ void IbasSigner::setupPkgParams() {
   if (pairing_init_set_buf(pairing, buffer, count)) pbc_die("pairing init failed");
   if (!pairing_is_symmetric(pairing)) pbc_die("pairing must be symmetric");
 
-  // Read P and Q using ifstream, since that is the easier way in C++
   element_init_G1(P, pairing);
   element_init_G1(Q, pairing);
+
+  FILE *pkgSecretParamsFile = fopen(secretParamsFilePath.c_str(), "w");
+  FILE *pkgPublicParamsFile = fopen(publicParamsFilePath.c_str(), "a");
 
   //generate secret key, this code was used only once to generate the parameters
   element_t s;
   element_init_Zr(s, pairing);
   element_random(s);
-  element_printf("s %B\n", s);
+  element_fprintf(pkgSecretParamsFile, "s %B\n", s);
   element_random(P);
-  element_printf("P %B\n", P);
+  element_fprintf(pkgPublicParamsFile, "P %B\n", P);
   element_mul_zn(Q, P, s); // Q = sP
-  element_printf("Q %B\n", Q);
+  element_fprintf(pkgPublicParamsFile, "Q %B\n", Q);
+
+  // Close the parameter files
+  fclose(pkgPublicParamsFile);
+  fclose(pkgSecretParamsFile);
+  std::cout << "Updated PKG's public parameters at: " << publicParamsFilePath << std::endl;
+  std::cout << "Stored PKG's secret parameters at: " << secretParamsFilePath << std::endl;
 }
 
   void IbasSigner::setupUserParams(const std::string& identity) {
