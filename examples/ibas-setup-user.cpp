@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     return 1;
   } else {
     KeyChain keyChain;
-    keyChain.setupPrivateParamIbas(argv[1]);
+    keyChain.setupUserParamsIbas(argv[1]);
   }
 
   return 0;

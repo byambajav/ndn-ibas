@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   using namespace ndn;
 
   KeyChain keyChain;
-  keyChain.setupPublicParamsIbas();
+  keyChain.setupPkgParamsIbas();
 
   return 0;
 }

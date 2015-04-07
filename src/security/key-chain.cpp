@@ -218,13 +218,13 @@ KeyChain::setIdentityIbas(const std::string& privateParamsFilePath) {
 }
 
   void
-  KeyChain::setupPublicParamsIbas() {
-    m_ibas->setupPublicParams();
+  KeyChain::setupPkgParamsIbas() {
+    m_ibas->setupPkgParams();
   }
 
   void
-  KeyChain::setupPrivateParamIbas(const std::string& identity) {
-    m_ibas->setupPrivateParam(identity);
+  KeyChain::setupUserParamsIbas(const std::string& identity) {
+    m_ibas->setupUserParams(identity);
   }
 
 Name

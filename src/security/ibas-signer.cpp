@@ -368,7 +368,7 @@ void IbasSigner::initializePublicParams(const std::string& publicParamsFilePath)
   }
 }
 
-void IbasSigner::setupPublicParams() {
+void IbasSigner::setupPkgParams() {
   const static std::string publicParamsFilePath =
     std::string(getenv("HOME")) + std::string("/.ndn/ibas/params.conf");
 
@@ -402,7 +402,7 @@ void IbasSigner::setupPublicParams() {
   element_printf("Q %B\n", Q);
 }
 
-  void IbasSigner::setupPrivateParam(const std::string& identity) {
+  void IbasSigner::setupUserParams(const std::string& identity) {
     util::generateSecretKeyForIdentity(identity, pairing);
   }
 
