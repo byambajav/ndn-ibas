@@ -1,0 +1,85 @@
+NDN-IBAS installing and running guide for Ubuntu 14.04
+
+1. Install and run NFD
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:named-data/ppa
+sudo apt-get update
+sudo apt-get install nfd
+nfd-start
+
+2. Install ndn-cxx prerequisites
+sudo apt-get install build-essential
+sudo apt-get install libssl-dev libsqlite3-dev libcrypto++-dev
+sudo apt-get install libboost-all-dev
+
+# optional (for creating documents)
+sudo apt-get install doxygen graphviz python-sphinx python-pip
+sudo pip install sphinxcontrib-doxylink sphinxcontrib-googleanalytics
+
+3. Install PBC library and its prerequisites
+sudo apt-get install flex bison
+sudo apt-get install libgmp3-dev
+
+# Download PBC library pbc-0.5.14.tar.gz from http://crypto.stanford.edu/pbc/download.html
+# Unpack pbc-0.5.14.tar.gz
+cd pbc-0.5.14
+./configure  # If an error occurs install required packages
+make
+sudo make install
+
+4. Build ndn-ibas
+cd ~ # can be any folder
+sudo apt-get install git # if not installed already
+git clone git://github.com/byambajav/ndn-ibas.git
+cd ndn-ibas
+./waf configure --with-examples
+./waf
+
+5. Create and store IBAS parameters
+# Create parameters folder
+cd ~
+mkdir .ndn # if not exist already
+cd .ndn
+mkdir ibas
+
+# Copy PBC's general parameters
+cd pbc-0.5.14/param
+cp a.param ~/.ndn/ibas/params.conf
+
+# Create private key generator (PKG)’s secret and public parameters
+# The following will create ~/.ndn/ibas/params.secret, and appends additional public parameters into ~/.ndn/ibas/params.conf
+cd ndn-ibas
+./build/examples/ibas-setup-pkg
+
+# Create each user’s private key
+# These commands will create private key files <identityName>.id in the ~/.ndn/ibas/ directory
+# Internally it loads params.conf and params.secret to create the keys
+cd ndn-ibas
+./build/examples/ibas-setup-user Alice
+./build/examples/ibas-setup-user GovernmentOffice
+./build/examples/ibas-setup-user Bob
+
+6. Run benchmark
+cd ndn-ibas
+# RSA, number of tests = 100, message size = 1000bytes
+./build/examples/ibas-benchmark 1 100 1000 0
+# IBAS, number of tests = 100, message size = 1000bytes
+./build/examples/ibas-benchmark 4 100 1000 0
+
+7. Run test application
+# open 3 different terminals
+cd ndn-ibas # on all 3 terminals
+# Do following in the exact written order
+./build/examples/alice 1 1000 # on terminal no.1, parameters: 1 => RSA (change to 4 in case of IBAS), 1000 => message size (change appropriately)
+./build/examples/government-office # on terminal no.2
+./build/examples/bob # on terminal no.3
+# If the test fails or times out, do following on one terminal and redo the step 7
+ndn-stop
+ndn-start
+
+* Notes on ~/.ndn/ibas/ folder
+The ~/.ndn/ibas/ folder contains keys necessary for IBAS signature generation and verification.
+- params.conf contains the PKG’s public parameters
+- params.secret contains the PKG’s secret key
+- <identity>.id files contain each user’s private parameters
+When deployed to multiple participants, params.conf should be distributed to each user, params.secret should be kept only at the PKG. And each user should receive  their corresponding <identity>.id files.

@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   bool log;
 
   if (argc != 5) {
-    cout << "Usage: " << argv[0] << " signatureType(1,3,4) n loadSize log" << endl;
+    cout << "Usage: " << argv[0] << " signatureType(1 => RSA, 4 => IBAS) n loadSize log" << endl;
     return 1;
   } else {
     signatureType = (tlv::SignatureTypeValue) atoi(argv[1]);
