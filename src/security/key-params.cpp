@@ -24,7 +24,7 @@
 namespace ndn {
 
 static const uint32_t RSA_KEY_SIZES[] = {2048, 1024};
-static const uint32_t ECDSA_KEY_SIZES[] = {256, 384};
+static const uint32_t ECDSA_KEY_SIZES[] = {384, 256};
 static const uint32_t AES_KEY_SIZES[] = {64, 128, 256};
 
 uint32_t

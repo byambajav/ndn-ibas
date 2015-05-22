@@ -94,12 +94,13 @@ class Subscriber : noncopyable
     uint32_t signatureType = data.getSignature().getType();
     if (signatureType == tlv::SignatureSha256Ibas) {
       return Validator::verifySignatureIbas(data);
-    } else if (signatureType == tlv::SignatureSha256WithRsa) {
+    } else if (signatureType == tlv::SignatureSha256WithRsa ||
+               signatureType == tlv::SignatureSha256WithEcdsa) {
       // Locate moderator's key, then verify
       Name keyName = m_keyChain.getDefaultKeyNameForIdentity(data.getName().getPrefix(3));
       shared_ptr<PublicKey> publicKey = m_keyChain.getPublicKey(keyName);
       if (!Validator::verifySignature(data, *publicKey)) {
-        std::cout << "Could not verify the modereator's signature" << std::endl;
+        std::cout << "Could not verify the moderator's signature" << std::endl;
         return false;
       }
 

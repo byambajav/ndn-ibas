@@ -32,7 +32,7 @@ int main(int argc, char** argv)
   size_t loadSize;
 
   if (argc != 3) {
-    cout << "Usage: " << argv[0] << " signatureType(1 => RSA, 4 => IBAS) loadSize" << endl;
+    cout << "Usage: " << argv[0] << " signatureType(1 => RSA, 3 => ECDSA, 4 => IBAS) loadSize" << endl;
     return 1;
   } else {
     signatureType = (tlv::SignatureTypeValue) atoi(argv[1]);

@@ -46,7 +46,9 @@ class Moderator : noncopyable
   Moderator(const std::string& name) {
     m_name = Name(name);
     m_keyChain.setIdentityIbas(getPrivateParamsFilePath(m_name.get(1).toUri()));
-    m_defaultCertName = m_keyChain.createIdentity(m_name);
+    static const EcdsaKeyParams ecdsaKeyParams;
+    m_defaultCertName = m_keyChain.createIdentity(m_name, ecdsaKeyParams);
+    // m_defaultCertName = m_keyChain.createIdentity(m_name);
   }
 
   void run() {
@@ -132,7 +134,8 @@ class Moderator : noncopyable
     uint32_t signatureType = data.getSignature().getType();
     if (signatureType == tlv::SignatureSha256Ibas) {
       return Validator::verifySignatureIbas(data);
-    } else if (signatureType == tlv::SignatureSha256WithRsa) {
+    } else if (signatureType == tlv::SignatureSha256WithRsa ||
+               signatureType == tlv::SignatureSha256WithEcdsa) {
       // Locate publisher's key, then verify
       Name keyName = m_keyChain.getDefaultKeyNameForIdentity(data.getName().getPrefix(3));
       shared_ptr<PublicKey> publicKey = m_keyChain.getPublicKey(keyName);
@@ -153,7 +156,8 @@ class Moderator : noncopyable
     if (signatureType == tlv::SignatureSha256Ibas) {
       data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
       m_keyChain.signAndAggregateIbas(data);
-    } else if (signatureType == tlv::SignatureSha256WithRsa) {
+    } else if (signatureType == tlv::SignatureSha256WithRsa ||
+               signatureType == tlv::SignatureSha256WithEcdsa) {
       // Append old signature into data's content part
       content.append("\nSignature:");
       content.append((const char*) data.getSignature().getInfo().wire(),

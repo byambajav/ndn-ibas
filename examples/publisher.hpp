@@ -27,6 +27,7 @@
 #include "encoding/tlv.hpp"
 #include "face.hpp"
 #include "security/key-chain.hpp"
+#include "security/key-params.hpp"
 #include "ibas-demo-helper.hpp"
 
 namespace ndn {
@@ -52,6 +53,9 @@ class Publisher : noncopyable
       m_keyChain.setIdentityIbas(getPrivateParamsFilePath(m_name.get(1).toUri()));
     } else if (m_signatureType == tlv::SignatureSha256WithRsa) {
       m_defaultCertName = m_keyChain.createIdentity(m_name);
+    } else if (m_signatureType == tlv::SignatureSha256WithEcdsa) {
+      static const EcdsaKeyParams ecdsaKeyParams;
+      m_defaultCertName = m_keyChain.createIdentity(m_name, ecdsaKeyParams);
     } else {
       std::cout << "Unsupported signature type: " << m_signatureType << std::endl;
     }
@@ -89,6 +93,8 @@ class Publisher : noncopyable
     if (m_signatureType == tlv::SignatureSha256Ibas) {
       m_keyChain.signIbas(*messageData);
     } else if (m_signatureType == tlv::SignatureSha256WithRsa) {
+      m_keyChain.signByIdentity(*messageData, m_name);
+    } else if (m_signatureType == tlv::SignatureSha256WithEcdsa) {
       m_keyChain.signByIdentity(*messageData, m_name);
     }
 
